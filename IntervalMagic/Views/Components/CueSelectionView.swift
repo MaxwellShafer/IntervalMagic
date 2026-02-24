@@ -8,113 +8,84 @@ import SwiftUI
 struct CueSelectionView: View {
     @Binding var cueType: CueType
 
+    private var hapticSelection: HapticStyle? {
+        get {
+            switch cueType {
+            case .none, .sound: return nil
+            case .haptic(let h): return h
+            case .both(let h, _): return h
+            }
+        }
+        set {
+            let s = soundSelection
+            if let h = newValue {
+                cueType = s.map { .both(h, $0) } ?? .haptic(h)
+            } else {
+                cueType = s.map { .sound($0) } ?? .none
+            }
+        }
+    }
+
+    private var soundSelection: SoundStyle? {
+        get {
+            switch cueType {
+            case .none, .haptic: return nil
+            case .sound(let s): return s
+            case .both(_, let s): return s
+            }
+        }
+        set {
+            let h = hapticSelection
+            if let s = newValue {
+                cueType = h.map { .both($0, s) } ?? .sound(s)
+            } else {
+                cueType = h.map { .haptic($0) } ?? .none
+            }
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Cue type")
+            Text("Cue")
                 .font(.headline)
 
-            Picker("Cue", selection: Binding(
-                get: { cueKind },
-                set: { newKind in
-                    switch newKind {
-                    case 0: cueType = .haptic(hapticFromCue)
-                    case 1: cueType = .sound(soundFromCue)
-                    case 2: cueType = .both(bothHaptic, bothSound)
-                    default: break
+            HStack {
+                Picker("Haptic", selection: Binding(
+                    get: { hapticSelection },
+                    set: { hapticSelection = $0 }
+                )) {
+                    Text("None").tag(nil as HapticStyle?)
+                    ForEach(HapticStyle.allCases, id: \.self) { style in
+                        Text(style.rawValue.capitalized).tag(style as HapticStyle?)
                     }
                 }
-            )) {
-                Text("Haptic only").tag(0)
-                Text("Sound only").tag(1)
-                Text("Both").tag(2)
-            }
-            .pickerStyle(.segmented)
-
-            switch cueKind {
-            case 0:
-                hapticStylePicker(hapticBinding: Binding(
-                    get: { hapticFromCue },
-                    set: { cueType = .haptic($0) }
-                ))
-            case 1:
-                soundStylePicker(soundBinding: Binding(
-                    get: { soundFromCue },
-                    set: { cueType = .sound($0) }
-                ))
-            case 2:
-                hapticStylePicker(hapticBinding: Binding(
-                    get: { bothHaptic },
-                    set: { h in
-                        let s = bothSound
-                        cueType = .both(h, s)
+                .pickerStyle(.menu)
+                if hapticSelection != nil {
+                    Button("Preview") {
+                        HapticCueService.shared.play(cueType: cueType)
                     }
-                ))
-                soundStylePicker(soundBinding: Binding(
-                    get: { bothSound },
-                    set: { s in
-                        let h = bothHaptic
-                        cueType = .both(h, s)
+                    .font(.caption)
+                }
+            }
+
+            HStack {
+                Picker("Sound", selection: Binding(
+                    get: { soundSelection },
+                    set: { soundSelection = $0 }
+                )) {
+                    Text("None").tag(nil as SoundStyle?)
+                    ForEach(SoundStyle.allCases, id: \.self) { style in
+                        Text(style.rawValue.capitalized).tag(style as SoundStyle?)
                     }
-                ))
-            default:
-                EmptyView()
+                }
+                .pickerStyle(.menu)
+                if soundSelection != nil {
+                    Button("Preview") {
+                        SoundCueService.shared.play(cueType: cueType)
+                    }
+                    .font(.caption)
+                }
             }
         }
-    }
-
-    private var cueKind: Int {
-        switch cueType {
-        case .haptic: return 0
-        case .sound: return 1
-        case .both: return 2
-        }
-    }
-
-    private var hapticFromCue: HapticStyle {
-        switch cueType {
-        case .haptic(let h): return h
-        case .both(let h, _): return h
-        default: return .single
-        }
-    }
-
-    private var soundFromCue: SoundStyle {
-        switch cueType {
-        case .sound(let s): return s
-        case .both(_, let s): return s
-        default: return .beep
-        }
-    }
-
-    private var bothHaptic: HapticStyle {
-        switch cueType {
-        case .both(let h, _): return h
-        default: return .single
-        }
-    }
-
-    private var bothSound: SoundStyle {
-        switch cueType {
-        case .both(_, let s): return s
-        default: return .beep
-        }
-    }
-
-    private func hapticStylePicker(hapticBinding: Binding<HapticStyle>) -> some View {
-        Picker("Haptic", selection: hapticBinding) {
-            ForEach(HapticStyle.allCases, id: \.self) { style in
-                Text(style.rawValue.capitalized).tag(style)
-            }
-        }
-        .pickerStyle(.menu)
-    }
-
-    private func soundStylePicker(soundBinding: Binding<SoundStyle>) -> some View {
-        Picker("Sound", selection: soundBinding) {
-            ForEach(SoundStyle.allCases, id: \.self) { style in
-                Text(style.rawValue.capitalized).tag(style)
-            }
-        }
-        .pickerStyle(.menu)
     }
 }

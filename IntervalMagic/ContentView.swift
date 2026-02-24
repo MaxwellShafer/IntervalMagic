@@ -23,6 +23,7 @@ struct ContentView: View {
             restoreState = nil
             showLiveSession = true
         })
+            .tint(AppTheme.primary)
             .fullScreenCover(isPresented: $showLiveSession) {
                 if let set = activeSessionSet {
                     LiveSessionView(

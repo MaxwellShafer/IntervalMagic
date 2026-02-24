@@ -7,11 +7,12 @@ import SwiftUI
 
 struct AddIntervalSheet: View {
     @Binding var isPresented: Bool
+    var suggestedName: String?
     let onSave: (Interval) -> Void
 
     @State private var name = ""
-    @State private var durationSeconds = 30
-    @State private var cueType: CueType = .haptic(.single)
+    @State private var durationSeconds = 12
+    @State private var cueType: CueType = .none
 
     var body: some View {
         NavigationStack {
@@ -33,18 +34,6 @@ struct AddIntervalSheet: View {
                 Section {
                     CueSelectionView(cueType: $cueType)
                 }
-
-                Section {
-                    HStack {
-                        Button("Preview haptic") {
-                            HapticCueService.shared.play(cueType: cueType)
-                        }
-                        Spacer()
-                        Button("Preview sound") {
-                            SoundCueService.shared.play(cueType: cueType)
-                        }
-                    }
-                }
             }
             .navigationTitle("Add Interval")
             .navigationBarTitleDisplayMode(.inline)
@@ -56,15 +45,18 @@ struct AddIntervalSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
+                        let displayName = name.trimmingCharacters(in: .whitespaces).isEmpty
+                            ? (suggestedName ?? "Interval")
+                            : name
                         let interval = Interval(
-                            name: name.isEmpty ? "Interval" : name,
+                            name: displayName,
                             durationSeconds: max(1, durationSeconds),
                             cueType: cueType
                         )
                         onSave(interval)
                         isPresented = false
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || durationSeconds < 1)
+                    .disabled(durationSeconds < 1)
                 }
             }
         }

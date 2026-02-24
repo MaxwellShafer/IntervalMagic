@@ -23,24 +23,35 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(sets) { set in
-                    IntervalSetRow(
-                        set: set,
-                        onTap: { selectedSetForStart = set },
-                        onOptions: { selectedSetForOptions = set }
-                    )
+            Group {
+                if sets.isEmpty {
+                    EmptyIntervalSetsView(onCreate: { showBuilder = true })
+                } else {
+                    List {
+                        ForEach(sets) { set in
+                            IntervalSetRow(
+                                set: set,
+                                onTap: { selectedSetForStart = set },
+                                onOptions: { selectedSetForOptions = set }
+                            )
+                        }
+                    }
                 }
             }
             .navigationTitle("Interval Magic")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showBuilder = true
-                    } label: {
-                        Label("Create Interval Set", systemImage: "plus.circle.fill")
-                    }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                Button {
+                    showBuilder = true
+                } label: {
+                    Label("Create Interval Set", systemImage: "plus.circle.fill")
+                        .font(.title3.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
                 }
+                .buttonStyle(.borderedProminent)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 8)
+                .background(.ultraThinMaterial)
             }
             .sheet(isPresented: $showBuilder) {
                 IntervalSetBuilderView(initialSet: setToEdit)
@@ -64,7 +75,7 @@ struct HomeView: View {
                         selectedSetForStart = nil
                     }
                 )
-                .presentationDetents([.fraction(0.45)])
+                .presentationDetents([.fraction(0.55)])
                 .presentationDragIndicator(.visible)
             }
             .sheet(item: $selectedSetForOptions) { set in
@@ -101,6 +112,21 @@ struct HomeView: View {
     private func deleteSet(_ set: IntervalSet) {
         let store = IntervalSetStore(modelContext: modelContext)
         try? store.delete(set)
+    }
+}
+
+struct EmptyIntervalSetsView: View {
+    let onCreate: () -> Void
+
+    var body: some View {
+        ContentUnavailableView {
+            Label("No interval sets yet", systemImage: "list.bullet.rectangle")
+        } description: {
+            Text("Create your first set to get started.")
+        } actions: {
+            Button("Create Interval Set", action: onCreate)
+                .buttonStyle(.borderedProminent)
+        }
     }
 }
 

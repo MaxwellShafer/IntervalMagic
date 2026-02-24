@@ -15,9 +15,9 @@ final class HapticCueService {
     func play(cueType: CueType) {
         let style: HapticStyle?
         switch cueType {
+        case .none, .sound: style = nil
         case .haptic(let h): style = h
         case .both(let h, _): style = h
-        case .sound: style = nil
         }
         guard let style else { return }
         play(style: style)

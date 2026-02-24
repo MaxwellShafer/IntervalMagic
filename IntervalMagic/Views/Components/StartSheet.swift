@@ -37,18 +37,9 @@ struct StartSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+Form {
                 Section("Cycle") {
                     SetCycleView(cycleMode: $cycleMode, fixedCycleCount: $fixedCycleCount)
-                }
-                Section {
-                    HStack {
-                        Text("Total duration")
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Text(formatDuration(effectiveSet.totalDurationSeconds))
-                            .foregroundStyle(.secondary)
-                    }
                 }
                 Section {
                     Button {
@@ -70,6 +61,15 @@ struct StartSheet: View {
                             .foregroundStyle(.primary)
                     }
                     .disabled(!effectiveSet.isValid)
+                }
+                Section {
+                    HStack {
+                        Text("Total duration")
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Text(formatDuration(effectiveSet.totalDurationSeconds))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             .scrollContentBackground(.visible)

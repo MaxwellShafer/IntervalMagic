@@ -56,6 +56,10 @@ final class IntervalSetBuilderViewModel {
         intervals.remove(at: index)
     }
 
+    func moveInterval(from source: IndexSet, to destination: Int) {
+        intervals.move(fromOffsets: source, toOffset: destination)
+    }
+
     func validate() -> Bool {
         if setName.trimmingCharacters(in: .whitespaces).isEmpty {
             validationError = "Set name is required"

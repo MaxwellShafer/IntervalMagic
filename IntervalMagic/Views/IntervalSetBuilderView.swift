@@ -44,7 +44,7 @@ struct IntervalSetBuilderView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            List {
                 Section("Set name") {
                     TextField("Interval set name", text: $viewModel.setName)
                 }
@@ -64,6 +64,7 @@ struct IntervalSetBuilderView: View {
                             onDelete: { viewModel.deleteInterval(at: index) }
                         )
                     }
+                    .onMove(perform: viewModel.moveInterval(from:to:))
                 } header: {
                     Text("Intervals")
                 }
@@ -91,8 +92,10 @@ struct IntervalSetBuilderView: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Interval Set Builder")
             .navigationBarTitleDisplayMode(.inline)
+            .tint(AppTheme.primary)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -107,7 +110,7 @@ struct IntervalSetBuilderView: View {
                 }
             }
             .sheet(isPresented: $showAddInterval) {
-                AddIntervalSheet(isPresented: $showAddInterval) { interval in
+                AddIntervalSheet(isPresented: $showAddInterval, suggestedName: "Interval \(viewModel.intervals.count + 1)") { interval in
                     viewModel.addInterval(interval)
                 }
             }
@@ -122,6 +125,7 @@ struct IntervalSetBuilderView: View {
                         set: { if !$0 { editingIndex = nil } }
                     ),
                     interval: viewModel.intervals[idx],
+                    suggestedName: "Interval \(idx + 1)",
                     onSave: { updated in
                         viewModel.updateInterval(at: idx, with: updated)
                         editingIndex = nil
@@ -156,15 +160,17 @@ struct IntervalSetBuilderView: View {
 struct EditIntervalSheet: View {
     @Binding var isPresented: Bool
     let interval: Interval
+    var suggestedName: String?
     let onSave: (Interval) -> Void
 
     @State private var name: String
     @State private var durationSeconds: Int
     @State private var cueType: CueType
 
-    init(isPresented: Binding<Bool>, interval: Interval, onSave: @escaping (Interval) -> Void) {
+    init(isPresented: Binding<Bool>, interval: Interval, suggestedName: String? = nil, onSave: @escaping (Interval) -> Void) {
         _isPresented = isPresented
         self.interval = interval
+        self.suggestedName = suggestedName
         self.onSave = onSave
         _name = State(initialValue: interval.name)
         _durationSeconds = State(initialValue: interval.durationSeconds)
@@ -189,13 +195,6 @@ struct EditIntervalSheet: View {
                 Section {
                     CueSelectionView(cueType: $cueType)
                 }
-                Section {
-                    HStack {
-                        Button("Preview haptic") { HapticCueService.shared.play(cueType: cueType) }
-                        Spacer()
-                        Button("Preview sound") { SoundCueService.shared.play(cueType: cueType) }
-                    }
-                }
             }
             .navigationTitle("Edit Interval")
             .navigationBarTitleDisplayMode(.inline)
@@ -205,10 +204,13 @@ struct EditIntervalSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        onSave(Interval(id: interval.id, name: name, durationSeconds: max(1, durationSeconds), cueType: cueType))
+                        let displayName = name.trimmingCharacters(in: .whitespaces).isEmpty
+                            ? (suggestedName ?? "Interval")
+                            : name
+                        onSave(Interval(id: interval.id, name: displayName, durationSeconds: max(1, durationSeconds), cueType: cueType))
                         isPresented = false
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || durationSeconds < 1)
+                    .disabled(durationSeconds < 1)
                 }
             }
         }

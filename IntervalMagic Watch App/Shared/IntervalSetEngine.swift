@@ -34,6 +34,7 @@ final class IntervalSetEngine: ObservableObject {
     var nextCueStyle: String? {
         guard let interval = currentInterval else { return nil }
         switch interval.cueType {
+        case .none: return "None"
         case .haptic(let h): return "Haptic \(h.rawValue)"
         case .sound(let s): return "Sound \(s.rawValue)"
         case .both(let h, let s): return "\(h.rawValue) + \(s.rawValue)"

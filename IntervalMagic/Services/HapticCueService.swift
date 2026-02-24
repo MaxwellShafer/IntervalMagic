@@ -8,8 +8,9 @@ import Foundation
 import UIKit
 #endif
 
-enum HapticCueService {
+final class HapticCueService {
     static let shared = HapticCueService()
+    private init() {}
 
     func play(cueType: CueType) {
         let style: HapticStyle?

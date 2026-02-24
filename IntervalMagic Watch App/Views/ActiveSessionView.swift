@@ -5,6 +5,7 @@
 
 import SwiftUI
 import HealthKit
+import Combine
 
 struct ActiveSessionView: View {
     let set: IntervalSet
@@ -88,7 +89,7 @@ struct ActiveSessionView: View {
         .onChange(of: engine.isCompleted) { _, completed in
             if completed {
                 workoutManager?.endWorkout()
-                WatchHapticCueService.shared.play(style: .double)
+                WatchHapticCueService.shared.play(style: HapticStyle.double)
                 showCompletion = true
             }
         }

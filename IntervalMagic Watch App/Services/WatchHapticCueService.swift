@@ -6,8 +6,9 @@
 import Foundation
 import WatchKit
 
-enum WatchHapticCueService {
+final class WatchHapticCueService {
     static let shared = WatchHapticCueService()
+    private init() {}
 
     func play(cueType: CueType) {
         let style: HapticStyle?

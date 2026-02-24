@@ -52,7 +52,14 @@ struct CueSelectionView: View {
             HStack {
                 Picker("Haptic", selection: Binding(
                     get: { hapticSelection },
-                    set: { hapticSelection = $0 }
+                    set: { newValue in
+                        let s = soundSelection
+                        if let h = newValue {
+                            cueType = s.map { .both(h, $0) } ?? .haptic(h)
+                        } else {
+                            cueType = s.map { .sound($0) } ?? .none
+                        }
+                    }
                 )) {
                     Text("None").tag(nil as HapticStyle?)
                     ForEach(HapticStyle.allCases, id: \.self) { style in
@@ -71,7 +78,14 @@ struct CueSelectionView: View {
             HStack {
                 Picker("Sound", selection: Binding(
                     get: { soundSelection },
-                    set: { soundSelection = $0 }
+                    set: { newValue in
+                        let h = hapticSelection
+                        if let s = newValue {
+                            cueType = h.map { .both($0, s) } ?? .sound(s)
+                        } else {
+                            cueType = h.map { .haptic($0) } ?? .none
+                        }
+                    }
                 )) {
                     Text("None").tag(nil as SoundStyle?)
                     ForEach(SoundStyle.allCases, id: \.self) { style in

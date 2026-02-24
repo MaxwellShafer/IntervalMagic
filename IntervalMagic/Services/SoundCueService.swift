@@ -6,11 +6,11 @@
 import Foundation
 import AVFoundation
 
-enum SoundCueService {
+final class SoundCueService {
     static let shared = SoundCueService()
     private var players: [SoundStyle: AVAudioPlayer] = [:]
 
-    init() {
+    private init() {
         for style in SoundStyle.allCases {
             if let url = Bundle.main.url(forResource: style.rawValue, withExtension: "wav", subdirectory: "Sounds"),
                let player = try? AVAudioPlayer(contentsOf: url) {

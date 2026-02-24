@@ -38,7 +38,7 @@ final class WatchConnectivityManager: NSObject {
         if session.isReachable {
             session.sendMessage(dict, replyHandler: nil)
         } else {
-            session.updateApplicationContext(dict)
+            try? session.updateApplicationContext(dict)
             session.transferUserInfo(dict)
         }
     }

@@ -5,7 +5,7 @@
 
 import Foundation
 
-enum SoundCue: Codable, Equatable, Sendable {
+enum SoundCue: Codable, Equatable, Hashable, Sendable {
     case predefined(SoundStyle)
     case custom(id: UUID, waitUntilFinished: Bool)
 

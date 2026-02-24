@@ -5,7 +5,7 @@
 
 import Foundation
 
-enum HapticCue: Codable, Equatable, Sendable {
+enum HapticCue: Codable, Equatable, Hashable, Sendable {
     case predefined(HapticStyle)
     case custom(id: UUID)
 

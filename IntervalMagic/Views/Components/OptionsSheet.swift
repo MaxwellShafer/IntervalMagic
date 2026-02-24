@@ -20,6 +20,7 @@ struct OptionsSheet: View {
                     onEdit()
                 } label: {
                     Label("Edit", systemImage: "pencil")
+                        .foregroundStyle(.primary)
                 }
                 Button {
                     let duplicated = IntervalSet(
@@ -32,6 +33,7 @@ struct OptionsSheet: View {
                     onDuplicate(duplicated)
                 } label: {
                     Label("Duplicate", systemImage: "doc.on.doc")
+                        .foregroundStyle(.primary)
                 }
                 Button(role: .destructive) {
                     onDelete()
@@ -42,10 +44,20 @@ struct OptionsSheet: View {
                     onClose()
                 } label: {
                     Label("Close", systemImage: "xmark.circle")
+                        .foregroundStyle(.primary)
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.visible)
             .navigationTitle("Options")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        onClose()
+                    }
+                }
+            }
         }
     }
 }

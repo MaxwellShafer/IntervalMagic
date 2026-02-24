@@ -14,9 +14,8 @@ struct HomeView: View {
 
     @State private var showBuilder = false
     @State private var setToEdit: IntervalSet?
-    @State private var selectedSet: IntervalSet?
-    @State private var showStartSheet = false
-    @State private var showOptionsSheet = false
+    @State private var selectedSetForStart: IntervalSet?
+    @State private var selectedSetForOptions: IntervalSet?
 
     private var sets: [IntervalSet] {
         setEntities.map { $0.toIntervalSet() }
@@ -28,14 +27,8 @@ struct HomeView: View {
                 ForEach(sets) { set in
                     IntervalSetRow(
                         set: set,
-                        onTap: {
-                            selectedSet = set
-                            showStartSheet = true
-                        },
-                        onOptions: {
-                            selectedSet = set
-                            showOptionsSheet = true
-                        }
+                        onTap: { selectedSetForStart = set },
+                        onOptions: { selectedSetForOptions = set }
                     )
                 }
             }
@@ -53,54 +46,54 @@ struct HomeView: View {
                 IntervalSetBuilderView(initialSet: setToEdit)
                     .onDisappear { setToEdit = nil }
             }
-            .sheet(isPresented: $showStartSheet) {
-                if let set = selectedSet {
-                    StartSheet(
-                        set: set,
-                        isPresented: $showStartSheet,
-                        onStart: { effectiveSet in
-                            startSession?(effectiveSet)
-                            showStartSheet = false
-                        },
-                        onStartOnWatch: { effectiveSet in
-                            let store = IntervalSetStore(modelContext: modelContext)
-                            let allSets = (try? store.fetchAll()) ?? []
-                            WatchConnectivityManager.shared.sendIntervalSets(allSets, startSetId: effectiveSet.id)
-                            showStartSheet = false
-                        }
-                    )
-                }
+            .sheet(item: $selectedSetForStart) { set in
+                StartSheet(
+                    set: set,
+                    isPresented: Binding(
+                        get: { selectedSetForStart != nil },
+                        set: { if !$0 { selectedSetForStart = nil } }
+                    ),
+                    onStart: { effectiveSet in
+                        startSession?(effectiveSet)
+                        selectedSetForStart = nil
+                    },
+                    onStartOnWatch: { effectiveSet in
+                        let store = IntervalSetStore(modelContext: modelContext)
+                        let allSets = (try? store.fetchAll()) ?? []
+                        WatchConnectivityManager.shared.sendIntervalSets(allSets, startSetId: effectiveSet.id)
+                        selectedSetForStart = nil
+                    }
+                )
+                .presentationDetents([.fraction(0.45)])
+                .presentationDragIndicator(.visible)
             }
-            .sheet(isPresented: $showOptionsSheet) {
-                if let set = selectedSet {
-                    OptionsSheet(
-                        set: set,
-                        isPresented: $showOptionsSheet,
-                        onEdit: {
-                            if let set = selectedSet {
-                                setToEdit = set
-                                showOptionsSheet = false
-                                selectedSet = nil
-                                showBuilder = true
-                            }
-                        },
-                        onDuplicate: { duplicated in
-                            let store = IntervalSetStore(modelContext: modelContext)
-                            try? store.save(duplicated)
-                            showOptionsSheet = false
-                            selectedSet = nil
-                        },
-                        onDelete: {
-                            deleteSet(set)
-                            showOptionsSheet = false
-                            selectedSet = nil
-                        },
-                        onClose: {
-                            showOptionsSheet = false
-                            selectedSet = nil
-                        }
-                    )
-                }
+            .sheet(item: $selectedSetForOptions) { set in
+                OptionsSheet(
+                    set: set,
+                    isPresented: Binding(
+                        get: { selectedSetForOptions != nil },
+                        set: { if !$0 { selectedSetForOptions = nil } }
+                    ),
+                    onEdit: {
+                        setToEdit = set
+                        selectedSetForOptions = nil
+                        showBuilder = true
+                    },
+                    onDuplicate: { duplicated in
+                        let store = IntervalSetStore(modelContext: modelContext)
+                        try? store.save(duplicated)
+                        selectedSetForOptions = nil
+                    },
+                    onDelete: {
+                        deleteSet(set)
+                        selectedSetForOptions = nil
+                    },
+                    onClose: {
+                        selectedSetForOptions = nil
+                    }
+                )
+                .presentationDetents([.fraction(0.45)])
+                .presentationDragIndicator(.visible)
             }
         }
     }

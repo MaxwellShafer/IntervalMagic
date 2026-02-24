@@ -44,6 +44,7 @@ struct StartSheet: View {
                 Section {
                     HStack {
                         Text("Total duration")
+                            .foregroundStyle(.primary)
                         Spacer()
                         Text(formatDuration(effectiveSet.totalDurationSeconds))
                             .foregroundStyle(.secondary)
@@ -56,6 +57,7 @@ struct StartSheet: View {
                     } label: {
                         Label("Start", systemImage: "play.fill")
                             .frame(maxWidth: .infinity)
+                            .foregroundStyle(.primary)
                     }
                     .disabled(!effectiveSet.isValid)
 
@@ -65,10 +67,12 @@ struct StartSheet: View {
                     } label: {
                         Label("Start on Watch", systemImage: "applewatch")
                             .frame(maxWidth: .infinity)
+                            .foregroundStyle(.primary)
                     }
                     .disabled(!effectiveSet.isValid)
                 }
             }
+            .scrollContentBackground(.visible)
             .navigationTitle(set.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

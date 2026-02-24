@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import SwiftUI
 import SwiftData
 
 @Observable
@@ -77,3 +78,4 @@ final class IntervalSetBuilderViewModel {
         return true
     }
 }
+

@@ -26,7 +26,7 @@ final class IntervalSetBuilderViewModel {
     }
 
     var totalDurationSeconds: Int {
-        set.totalDurationSeconds
+        return set.totalDurationSeconds
     }
 
     var isValid: Bool {

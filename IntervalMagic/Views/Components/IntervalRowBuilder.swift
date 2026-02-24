@@ -36,9 +36,9 @@ struct IntervalRowBuilder: View {
     private var cueDescription: String {
         switch interval.cueType {
         case .none: return "No cue"
-        case .haptic(let h): return "Haptic \(h.rawValue)"
-        case .sound(let s): return "Sound \(s.rawValue)"
-        case .both(let h, let s): return "\(h.rawValue) + \(s.rawValue)"
+        case .haptic(let h): return "Haptic \(h.displayName)"
+        case .sound(let s): return "Sound \(s.displayName)"
+        case .both(let h, let s): return "\(h.displayName) + \(s.displayName)"
         }
     }
 }

@@ -23,7 +23,7 @@ final class IntervalEntity {
 
     var cueType: CueType {
         get {
-            (try? JSONDecoder().decode(CueType.self, from: cueTypeData)) ?? .haptic(.single)
+            (try? JSONDecoder().decode(CueType.self, from: cueTypeData)) ?? .haptic(.predefined(.single))
         }
         set {
             cueTypeData = (try? JSONEncoder().encode(newValue)) ?? cueTypeData

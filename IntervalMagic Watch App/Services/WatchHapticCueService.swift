@@ -11,14 +11,20 @@ final class WatchHapticCueService {
     private init() {}
 
     func play(cueType: CueType) {
-        let style: HapticStyle?
+        let cue: HapticCue?
         switch cueType {
-        case .none, .sound: style = nil
-        case .haptic(let h): style = h
-        case .both(let h, _): style = h
+        case .none, .sound: cue = nil
+        case .haptic(let h): cue = h
+        case .both(let h, _): cue = h
         }
-        guard let style else { return }
-        play(style: style)
+        guard let cue else { return }
+        switch cue {
+        case .predefined(let style):
+            play(style: style)
+        case .custom:
+            // Custom haptics not synced to Watch; no-op
+            break
+        }
     }
 
     func play(style: HapticStyle) {

@@ -8,7 +8,7 @@ import SwiftUI
 struct CueSelectionView: View {
     @Binding var cueType: CueType
 
-    private var hapticSelection: HapticStyle? {
+    private var hapticSelection: HapticCue? {
         get {
             switch cueType {
             case .none, .sound: return nil
@@ -26,7 +26,7 @@ struct CueSelectionView: View {
         }
     }
 
-    private var soundSelection: SoundStyle? {
+    private var soundSelection: SoundCue? {
         get {
             switch cueType {
             case .none, .haptic: return nil
@@ -44,10 +44,27 @@ struct CueSelectionView: View {
         }
     }
 
+    private var hasCue: Bool {
+        switch cueType {
+        case .none: return false
+        case .haptic, .sound, .both: return true
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Cue")
-                .font(.headline)
+            HStack {
+                Text("Cue")
+                    .font(.headline)
+                Spacer()
+                if hasCue {
+                    Button("Preview") {
+                        HapticCueService.shared.play(cueType: cueType)
+                        SoundCueService.shared.play(cueType: cueType)
+                    }
+                    .font(.caption)
+                }
+            }
 
             HStack {
                 Picker("Haptic", selection: Binding(
@@ -61,18 +78,12 @@ struct CueSelectionView: View {
                         }
                     }
                 )) {
-                    Text("None").tag(nil as HapticStyle?)
+                    Text("None").tag(nil as HapticCue?)
                     ForEach(HapticStyle.allCases, id: \.self) { style in
-                        Text(style.rawValue.capitalized).tag(style as HapticStyle?)
+                        Text(style.rawValue.capitalized).tag(HapticCue.predefined(style) as HapticCue?)
                     }
                 }
                 .pickerStyle(.menu)
-                if hapticSelection != nil {
-                    Button("Preview") {
-                        HapticCueService.shared.play(cueType: cueType)
-                    }
-                    .font(.caption)
-                }
             }
 
             HStack {
@@ -87,18 +98,12 @@ struct CueSelectionView: View {
                         }
                     }
                 )) {
-                    Text("None").tag(nil as SoundStyle?)
+                    Text("None").tag(nil as SoundCue?)
                     ForEach(SoundStyle.allCases, id: \.self) { style in
-                        Text(style.rawValue.capitalized).tag(style as SoundStyle?)
+                        Text(style.rawValue.capitalized).tag(SoundCue.predefined(style) as SoundCue?)
                     }
                 }
                 .pickerStyle(.menu)
-                if soundSelection != nil {
-                    Button("Preview") {
-                        SoundCueService.shared.play(cueType: cueType)
-                    }
-                    .font(.caption)
-                }
             }
         }
     }

@@ -5,7 +5,7 @@
 
 import Foundation
 
-enum SoundStyle: String, Codable, CaseIterable, Equatable {
+enum SoundStyle: String, Codable, CaseIterable, Equatable, Sendable {
     case beep
     case chime
     case tick

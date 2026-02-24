@@ -71,7 +71,7 @@ struct IntervalSetBuilderView: View {
                 Section("Cycle") {
                     SetCycleView(cycleMode: $viewModel.cycleMode, fixedCycleCount: Binding(
                         get: { fixedCycleCount },
-                        set: { fixedCycleCount = $0 }
+                        set: { newValue in viewModel.cycleMode = .fixed(max(1, newValue)) }
                     ))
                 }
 

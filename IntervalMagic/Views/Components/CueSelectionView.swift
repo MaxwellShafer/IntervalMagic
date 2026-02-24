@@ -15,7 +15,14 @@ struct CueSelectionView: View {
 
             Picker("Cue", selection: Binding(
                 get: { cueKind },
-                set: { cueKind = $0; applyCueKind() }
+                set: { newKind in
+                    switch newKind {
+                    case 0: cueType = .haptic(hapticFromCue)
+                    case 1: cueType = .sound(soundFromCue)
+                    case 2: cueType = .both(bothHaptic, bothSound)
+                    default: break
+                    }
+                }
             )) {
                 Text("Haptic only").tag(0)
                 Text("Sound only").tag(1)
@@ -60,15 +67,6 @@ struct CueSelectionView: View {
         case .haptic: return 0
         case .sound: return 1
         case .both: return 2
-        }
-    }
-
-    private func applyCueKind() {
-        switch cueKind {
-        case 0: cueType = .haptic(hapticFromCue)
-        case 1: cueType = .sound(soundFromCue)
-        case 2: cueType = .both(bothHaptic, bothSound)
-        default: break
         }
     }
 

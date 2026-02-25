@@ -21,10 +21,14 @@ struct ContentView: View {
             SessionPersistence.clear()
             activeSessionSet = set
             restoreState = nil
-            showLiveSession = true
+            // Defer presentation to next runloop to ensure state is applied
+            DispatchQueue.main.async {
+                showLiveSession = true
+            }
         })
-            .tint(AppTheme.primary)
-            .fullScreenCover(isPresented: $showLiveSession) {
+        .tint(AppTheme.primary)
+        .fullScreenCover(isPresented: $showLiveSession) {
+            Group {
                 if let set = activeSessionSet {
                     LiveSessionView(
                         set: set,
@@ -36,8 +40,17 @@ struct ContentView: View {
                             showLiveSession = false
                         }
                     )
+                } else {
+                    // Fallback to avoid a blank screen if state gets out of sync
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Preparing session…")
+                            .font(.headline)
+                    }
+                    .padding()
                 }
             }
+        }
             .onAppear {
                 if let state = SessionPersistence.load() {
                     let store = IntervalSetStore(modelContext: modelContext)

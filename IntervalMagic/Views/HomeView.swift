@@ -71,7 +71,9 @@ struct HomeView: View {
                     onStartOnWatch: { effectiveSet in
                         let store = IntervalSetStore(modelContext: modelContext)
                         let allSets = (try? store.fetchAll()) ?? []
-                        WatchConnectivityManager.shared.sendIntervalSets(allSets, startSetId: effectiveSet.id)
+                        // Send the saved sets, but override the selected set's cycle mode for this start only.
+                        let patched = allSets.map { $0.id == effectiveSet.id ? effectiveSet : $0 }
+                        WatchConnectivityManager.shared.sendIntervalSets(patched, startSetId: effectiveSet.id)
                         selectedSetForStart = nil
                     }
                 )

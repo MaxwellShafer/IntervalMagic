@@ -32,16 +32,6 @@ struct IntervalSetBuilderView: View {
         _viewModel = State(initialValue: vm)
     }
 
-    private var fixedCycleCount: Int {
-        get {
-            if case .fixed(let n) = viewModel.cycleMode { return n }
-            return 1
-        }
-        set {
-            viewModel.cycleMode = .fixed(max(1, newValue))
-        }
-    }
-
     var body: some View {
         NavigationStack {
             List {
@@ -70,10 +60,7 @@ struct IntervalSetBuilderView: View {
                 }
 
                 Section("Cycle") {
-                    SetCycleView(cycleMode: $viewModel.cycleMode, fixedCycleCount: Binding(
-                        get: { fixedCycleCount },
-                        set: { newValue in viewModel.cycleMode = .fixed(max(1, newValue)) }
-                    ))
+                    CycleCountInputView(cycleMode: $viewModel.cycleMode)
                 }
 
                 Section {

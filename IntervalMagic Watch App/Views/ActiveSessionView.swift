@@ -46,25 +46,31 @@ struct ActiveSessionView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    HStack {
-                        Button {
-                            if engine.isPaused {
-                                engine.resume()
-                            } else {
-                                engine.pause()
-                            }
-                        } label: {
-                            Image(systemName: engine.isPaused ? "play.fill" : "pause.fill")
-                        }
+                    VStack(spacing: 8) {
                         if engine.isPaused {
+                            HStack {
+                                Button {
+                                    engine.resume()
+                                } label: {
+                                    Image(systemName: "play.fill")
+                                }
+
+                                Button(role: .destructive) {
+                                    engine.stop()
+                                    workoutManager?.endWorkout()
+                                    onDismiss()
+                                } label: {
+                                    Image(systemName: "stop.fill")
+                                }
+                            }
+                        } else {
                             Button {
-                                engine.stop()
-                                showCompletion = true
-                                workoutManager?.endWorkout()
+                                engine.pause()
                             } label: {
-                                Image(systemName: "stop.fill")
+                                Image(systemName: "pause.fill")
                             }
                         }
+
                         Toggle("Mute", isOn: Binding(
                             get: { muteState.hapticsMuted },
                             set: { muteState.hapticsMuted = $0 }

@@ -54,23 +54,44 @@ struct LiveSessionView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    HStack(spacing: 20) {
-                        Button {
-                            if engine.isPaused {
-                                engine.resume()
-                            } else {
-                                engine.pause()
+                    VStack(spacing: 16) {
+                        if engine.isPaused {
+                            HStack(spacing: 16) {
+                                Button {
+                                    engine.resume()
+                                } label: {
+                                    Label("Continue", systemImage: "play.fill")
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.borderedProminent)
+
+                                Button(role: .destructive) {
+                                    showStopConfirmation = true
+                                } label: {
+                                    Label("Stop", systemImage: "stop.fill")
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.bordered)
                             }
-                        } label: {
-                            Label(engine.isPaused ? "Resume" : "Pause", systemImage: engine.isPaused ? "play.fill" : "pause.fill")
+                        } else {
+                            Button {
+                                engine.pause()
+                            } label: {
+                                Label("Pause", systemImage: "pause.fill")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
                         }
 
-                        Toggle("Mute haptics", isOn: Binding(
-                            get: { muteState.hapticsMuted },
-                            set: { muteState.hapticsMuted = $0 }
-                        ))
+                        HStack(spacing: 12) {
+                            Toggle("Mute haptics", isOn: Binding(
+                                get: { muteState.hapticsMuted },
+                                set: { muteState.hapticsMuted = $0 }
+                            ))
                             .labelsHidden()
-                        Image(systemName: muteState.hapticsMuted ? "speaker.slash" : "hand.raised")
+                            Image(systemName: muteState.hapticsMuted ? "speaker.slash" : "hand.raised")
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
             }

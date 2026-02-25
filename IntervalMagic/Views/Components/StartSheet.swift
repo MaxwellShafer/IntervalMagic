@@ -13,7 +13,6 @@ struct StartSheet: View {
     let onStartOnWatch: (IntervalSet) -> Void
 
     @State private var cycleMode: CycleMode
-    @State private var fixedCycleCount: Int
     @Environment(\.modelContext) private var modelContext
 
     init(set: IntervalSet, isPresented: Binding<Bool>, onStart: @escaping (IntervalSet) -> Void, onStartOnWatch: @escaping (IntervalSet) -> Void) {
@@ -24,10 +23,8 @@ struct StartSheet: View {
         switch set.cycleMode {
         case .fixed(let n):
             _cycleMode = State(initialValue: .fixed(n))
-            _fixedCycleCount = State(initialValue: n)
         case .infinite:
             _cycleMode = State(initialValue: .infinite)
-            _fixedCycleCount = State(initialValue: 1)
         }
     }
 
@@ -39,7 +36,7 @@ struct StartSheet: View {
         NavigationStack {
 Form {
                 Section("Cycle") {
-                    SetCycleView(cycleMode: $cycleMode, fixedCycleCount: $fixedCycleCount)
+                    CycleCountInputView(cycleMode: $cycleMode)
                 }
                 Section {
                     Button {

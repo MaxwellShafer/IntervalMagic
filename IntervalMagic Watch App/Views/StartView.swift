@@ -37,12 +37,19 @@ struct StartView: View {
             }
         }
         .onAppear {
-            if let startId = connectivity.pendingStartSetId,
-               let set = connectivity.intervalSets.first(where: { $0.id == startId }) {
-                connectivity.clearPendingStart()
-                selectedSet = set
-                showActive = true
-            }
+            handlePendingStart()
+        }
+        .onChange(of: connectivity.pendingStartSetId) { _, _ in
+            handlePendingStart()
+        }
+    }
+
+    private func handlePendingStart() {
+        if let startId = connectivity.pendingStartSetId,
+           let set = connectivity.intervalSets.first(where: { $0.id == startId }) {
+            connectivity.clearPendingStart()
+            selectedSet = set
+            showActive = true
         }
     }
 

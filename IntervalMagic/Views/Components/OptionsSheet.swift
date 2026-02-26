@@ -40,19 +40,13 @@ struct OptionsSheet: View {
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
-                Button {
-                    onClose()
-                } label: {
-                    Label("Close", systemImage: "xmark.circle")
-                        .foregroundStyle(.primary)
-                }
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.visible)
             .navigationTitle("Options")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("Close") {
                         onClose()
                     }

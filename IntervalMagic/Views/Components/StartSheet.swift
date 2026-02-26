@@ -49,6 +49,14 @@ Form {
                     }
                     .disabled(!effectiveSet.isValid)
 
+                    HStack {
+                        Spacer()
+                        Divider()
+                            .frame(maxWidth: 200)
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
+
                     Button {
                         onStartOnWatch(effectiveSet)
                         isPresented = false
@@ -73,7 +81,7 @@ Form {
             .navigationTitle(set.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("Close") {
                         isPresented = false
                     }

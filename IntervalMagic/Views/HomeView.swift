@@ -13,6 +13,7 @@ struct HomeView: View {
     var startSession: ((IntervalSet) -> Void)?
 
     @State private var showBuilder = false
+    @State private var showSettings = false
     @State private var setToEdit: IntervalSet?
     @State private var selectedSetForStart: IntervalSet?
     @State private var selectedSetForOptions: IntervalSet?
@@ -51,7 +52,16 @@ struct HomeView: View {
                 .buttonStyle(.borderedProminent)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 8)
-                .background(.ultraThinMaterial)
+                .background(Color(uiColor: .systemBackground))
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
             }
             .sheet(isPresented: $showBuilder) {
                 IntervalSetBuilderView(initialSet: setToEdit)
@@ -108,6 +118,9 @@ struct HomeView: View {
                 .presentationDetents([.fraction(0.45)])
                 .presentationDragIndicator(.visible)
             }
+            .sheet(isPresented: $showSettings) {
+                SettingsView(isPresented: $showSettings)
+            }
         }
     }
 
@@ -149,9 +162,7 @@ struct IntervalSetRow: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Menu {
-                    Button("Options", systemImage: "ellipsis.circle", action: onOptions)
-                } label: {
+                Button(action: onOptions) {
                     Image(systemName: "ellipsis.circle")
                         .font(.title3)
                         .foregroundStyle(.primary)

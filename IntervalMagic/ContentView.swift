@@ -10,72 +10,61 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var activeSessionSet: IntervalSet?
+    @AppStorage("useLightMode") private var useLightMode = false
+    /// Single source of truth: when non-nil, present fullScreenCover with this set (avoids "Preparing session" race).
+    @State private var sessionToPresent: IntervalSet?
     @State private var restoreState: SessionState?
-    @State private var showLiveSession = false
     @State private var showResumeAlert = false
     @State private var pendingResumeSet: IntervalSet?
 
     var body: some View {
         HomeView(startSession: { set in
             SessionPersistence.clear()
-            activeSessionSet = set
             restoreState = nil
-            // Defer presentation to next runloop to ensure state is applied
-            DispatchQueue.main.async {
-                showLiveSession = true
-            }
+            sessionToPresent = set
         })
         .tint(AppTheme.primary)
-        .fullScreenCover(isPresented: $showLiveSession) {
-            Group {
-                if let set = activeSessionSet {
-                    LiveSessionView(
-                        set: set,
-                        restoreState: restoreState,
-                        onDismiss: {
-                            SessionPersistence.clear()
-                            activeSessionSet = nil
-                            restoreState = nil
-                            showLiveSession = false
-                        }
-                    )
-                } else {
-                    // Fallback to avoid a blank screen if state gets out of sync
-                    VStack(spacing: 16) {
-                        ProgressView()
-                        Text("Preparing session…")
-                            .font(.headline)
+        .preferredColorScheme(useLightMode ? .light : nil)
+        .fullScreenCover(isPresented: Binding(
+            get: { sessionToPresent != nil },
+            set: { if !$0 { sessionToPresent = nil; restoreState = nil; SessionPersistence.clear() } }
+        )) {
+            if let set = sessionToPresent {
+                LiveSessionView(
+                    set: set,
+                    restoreState: restoreState,
+                    onDismiss: {
+                        SessionPersistence.clear()
+                        sessionToPresent = nil
+                        restoreState = nil
                     }
-                    .padding()
+                )
+            }
+        }
+        .onAppear {
+            if let state = SessionPersistence.load() {
+                let store = IntervalSetStore(modelContext: modelContext)
+                let sets = (try? store.fetchAll()) ?? []
+                if let set = sets.first(where: { $0.id == state.setId }) {
+                    pendingResumeSet = set
+                    showResumeAlert = true
                 }
             }
         }
-            .onAppear {
-                if let state = SessionPersistence.load() {
-                    let store = IntervalSetStore(modelContext: modelContext)
-                    let sets = (try? store.fetchAll()) ?? []
-                    if let set = sets.first(where: { $0.id == state.setId }) {
-                        pendingResumeSet = set
-                        showResumeAlert = true
-                    }
+        .alert("Resume session?", isPresented: $showResumeAlert) {
+            Button("Resume") {
+                if let set = pendingResumeSet, let state = SessionPersistence.load() {
+                    restoreState = state
+                    sessionToPresent = set
                 }
+                pendingResumeSet = nil
             }
-            .alert("Resume session?", isPresented: $showResumeAlert) {
-                Button("Resume") {
-                    if let set = pendingResumeSet, let state = SessionPersistence.load() {
-                        activeSessionSet = set
-                        restoreState = state
-                        showLiveSession = true
-                    }
-                    pendingResumeSet = nil
-                }
-                Button("Cancel", role: .cancel) {
-                    SessionPersistence.clear()
-                    pendingResumeSet = nil
-                }
-            } message: {
-                Text("You have an unfinished interval session.")
+            Button("Cancel", role: .cancel) {
+                SessionPersistence.clear()
+                pendingResumeSet = nil
             }
+        } message: {
+            Text("You have an unfinished interval session.")
+        }
     }
 }

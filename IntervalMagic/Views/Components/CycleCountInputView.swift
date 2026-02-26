@@ -16,7 +16,7 @@ struct CycleCountInputView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .center, spacing: 8) {
             HStack(spacing: 12) {
                 Button {
                     decrement()
@@ -43,7 +43,7 @@ struct CycleCountInputView: View {
                 .buttonStyle(.borderless)
             }
 
-            Text("Leave blank or set to 0 to loop (infinite).")
+            Text("Set to 0 for loop.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

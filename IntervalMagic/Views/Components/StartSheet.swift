@@ -36,44 +36,42 @@ struct StartSheet: View {
         NavigationStack {
 Form {
                 Section("Cycle") {
-                    CycleCountInputView(cycleMode: $cycleMode)
-                }
-                Section {
-                    Button {
-                        onStart(effectiveSet)
-                        isPresented = false
-                    } label: {
-                        Label("Start", systemImage: "play.fill")
-                            .frame(maxWidth: .infinity)
-                            .foregroundStyle(.primary)
-                    }
-                    .disabled(!effectiveSet.isValid)
-
-                    HStack {
+                    HStack{
+                        CycleCountInputView(cycleMode: $cycleMode)
                         Spacer()
                         Divider()
-                            .frame(maxWidth: 200)
                         Spacer()
+                        VStack(alignment: HorizontalAlignment.center) {
+                            Text("Total duration")
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text(formatDuration(effectiveSet.totalDurationSeconds))
+                                .foregroundStyle(.secondary)
+                        }
+                        
                     }
-                    .padding(.vertical, 4)
-
-                    Button {
-                        onStartOnWatch(effectiveSet)
-                        isPresented = false
-                    } label: {
-                        Label("Start on Watch", systemImage: "applewatch")
-                            .frame(maxWidth: .infinity)
-                            .foregroundStyle(.primary)
-                    }
-                    .disabled(!effectiveSet.isValid)
                 }
                 Section {
-                    HStack {
-                        Text("Total duration")
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Text(formatDuration(effectiveSet.totalDurationSeconds))
-                            .foregroundStyle(.secondary)
+                    HStack{
+                        Button {
+                            onStart(effectiveSet)
+                            isPresented = false
+                        } label: {
+                            Label("Start", systemImage: "play.fill")
+                                .frame(maxWidth: .infinity)
+                                .foregroundStyle(.primary)
+                        }
+                        .disabled(!effectiveSet.isValid)
+                        Divider()
+                        Button {
+                            onStartOnWatch(effectiveSet)
+                            isPresented = false
+                        } label: {
+                            Label("Start on Watch", systemImage: "applewatch")
+                                .frame(maxWidth: .infinity)
+                                .foregroundStyle(.primary)
+                        }
+                        .disabled(!effectiveSet.isValid)
                     }
                 }
             }

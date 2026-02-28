@@ -52,17 +52,51 @@ final class HapticCueService {
         #endif
     }
 
-    /// Custom haptic playback (pattern from CustomCuesStore). No-op if definition not found.
+    /// Custom haptic playback (steps from CustomCuesStore). No-op if definition not found.
     func playCustom(id: UUID) {
         #if canImport(UIKit)
         guard let def = CustomCuesStore.shared.customHaptic(by: id) else { return }
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.prepare()
-        for offset in def.pattern {
-            DispatchQueue.main.asyncAfter(deadline: .now() + offset) {
-                generator.impactOccurred()
-            }
-        }
+        let steps = def.steps.isEmpty ? Self.stepsFromLegacyPattern(def.pattern) : def.steps
+        guard !steps.isEmpty else { return }
+        playSteps(steps, index: 0, delayAccumulator: 0)
         #endif
     }
+
+    #if canImport(UIKit)
+    private func playSteps(_ steps: [CustomHapticStep], index: Int, delayAccumulator: TimeInterval) {
+        guard index < steps.count else { return }
+        let step = steps[index]
+        switch step {
+        case .delay(let seconds):
+            let nextDelay = delayAccumulator + seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + nextDelay) { [weak self] in
+                self?.playSteps(steps, index: index + 1, delayAccumulator: 0)
+            }
+        case .haptic(let style, let intensity):
+            let styleUIKit = uiImpactStyle(style)
+            let generator = UIImpactFeedbackGenerator(style: styleUIKit)
+            generator.prepare()
+            DispatchQueue.main.asyncAfter(deadline: .now() + delayAccumulator) {
+                generator.impactOccurred(intensity: CGFloat(max(0, min(1, intensity))))
+                DispatchQueue.main.async {
+                    self.playSteps(steps, index: index + 1, delayAccumulator: 0)
+                }
+            }
+        }
+    }
+
+    private func uiImpactStyle(_ style: ImpactHapticStyle) -> UIImpactFeedbackGenerator.FeedbackStyle {
+        switch style {
+        case .light: return .light
+        case .medium: return .medium
+        case .heavy: return .heavy
+        case .soft: return .soft
+        case .rigid: return .rigid
+        }
+    }
+
+    private static func stepsFromLegacyPattern(_ pattern: [Double]) -> [CustomHapticStep] {
+        CustomCuesStore.steps(fromLegacyPattern: pattern)
+    }
+    #endif
 }

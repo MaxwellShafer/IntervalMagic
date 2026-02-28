@@ -41,6 +41,14 @@ final class CustomCuesStore {
         customHaptics = list
     }
 
+    /// Add or replace a custom haptic (e.g. when saving from the editor).
+    func addOrUpdate(_ def: CustomHapticDefinition) {
+        var list = customHaptics
+        list.removeAll { $0.id == def.id }
+        list.append(def)
+        customHaptics = list
+    }
+
     func deleteCustomHaptic(id: UUID) {
         customHaptics = customHaptics.filter { $0.id != id }
     }
@@ -101,10 +109,36 @@ final class CustomCuesStore {
 
     private func loadHaptics() -> [CustomHapticDefinition] {
         guard let data = defaults.data(forKey: customHapticsKey),
-              let list = try? JSONDecoder().decode([CustomHapticDefinition].self, from: data) else {
+              var list = try? JSONDecoder().decode([CustomHapticDefinition].self, from: data) else {
             return []
         }
+        // Migrate legacy pattern-only definitions to steps
+        var didMigrate = false
+        for i in list.indices where list[i].steps.isEmpty && !list[i].pattern.isEmpty {
+            list[i].steps = Self.steps(fromLegacyPattern: list[i].pattern)
+            didMigrate = true
+        }
+        if didMigrate {
+            saveHaptics(list)
+        }
         return list
+    }
+
+    /// Converts legacy pattern (time offsets) to steps: haptic at 0, then delay + haptic for each subsequent offset.
+    static func steps(fromLegacyPattern pattern: [Double]) -> [CustomHapticStep] {
+        guard !pattern.isEmpty else { return [] }
+        var result: [CustomHapticStep] = []
+        let sortedOffsets = pattern.sorted()
+        var lastTime: Double = 0
+        for offset in sortedOffsets {
+            let delay = offset - lastTime
+            if delay > 0.01 {
+                result.append(.delay(seconds: delay))
+            }
+            result.append(.haptic(style: .medium, intensity: 1.0))
+            lastTime = offset
+        }
+        return result
     }
 
     private func saveHaptics(_ list: [CustomHapticDefinition]) {

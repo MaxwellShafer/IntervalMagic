@@ -7,6 +7,7 @@ import SwiftUI
 
 struct CueSelectionView: View {
     @Binding var cueType: CueType
+    private let store = CustomCuesStore.shared
 
     private var hapticSelection: HapticCue? {
         get {
@@ -81,6 +82,9 @@ struct CueSelectionView: View {
                     Text("None").tag(nil as HapticCue?)
                     ForEach(HapticStyle.allCases, id: \.self) { style in
                         Text(style.rawValue.capitalized).tag(HapticCue.predefined(style) as HapticCue?)
+                    }
+                    ForEach(store.customHaptics) { def in
+                        Text(def.displayName).tag(HapticCue.custom(id: def.id) as HapticCue?)
                     }
                 }
                 .pickerStyle(.menu)

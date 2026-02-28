@@ -8,6 +8,7 @@ import UIKit
 
 struct SettingsView: View {
     @Binding var isPresented: Bool
+    @State private var showCustomHaptics = false
     @AppStorage("useLightMode") private var useLightMode = false
     @AppStorage("intervalOutlineShape") private var intervalOutlineShapeRaw = IntervalOutlineShape.circle.rawValue
     @AppStorage("intervalOutlineColor") private var intervalOutlineColorData: Data = try! NSKeyedArchiver.archivedData(withRootObject: UIColor.systemBlue, requiringSecureCoding: false)
@@ -46,6 +47,17 @@ struct SettingsView: View {
                         }
                     ))
                 }
+
+                Section {
+                    Button {
+                        showCustomHaptics = true
+                    } label: {
+                        Label("Custom Haptics", systemImage: "waveform.path")
+                    }
+                }
+            }
+            .sheet(isPresented: $showCustomHaptics) {
+                CustomHapticsListView()
             }
             .scrollContentBackground(.visible)
             .navigationTitle("Settings")

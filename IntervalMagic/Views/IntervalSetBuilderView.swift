@@ -60,17 +60,19 @@ struct IntervalSetBuilderView: View {
                 }
 
                 Section("Cycle") {
-                    CycleCountInputView(cycleMode: $viewModel.cycleMode)
-                }
-
-                Section {
                     HStack {
-                        Text("Total duration")
-                        Spacer()
-                        Text(formatDuration(viewModel.totalDurationSeconds))
-                            .foregroundStyle(.secondary)
+                        
+                        CycleCountInputView(cycleMode: $viewModel.cycleMode)
+                        
+                        VStack {
+                            Text("Total duration")
+                            Spacer()
+                            Text(formatDuration(viewModel.totalDurationSeconds))
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
+
 
                 if let error = viewModel.validationError {
                     Section {

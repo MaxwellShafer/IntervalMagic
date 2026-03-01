@@ -5,7 +5,7 @@
 
 import Foundation
 import AVFoundation
-import AudioToolbox
+import WatchKit
 
 final class WatchSoundCueService {
     static let shared = WatchSoundCueService()
@@ -48,13 +48,18 @@ final class WatchSoundCueService {
     }
 
     private func playSystemSoundFallback(style: SoundStyle) {
-        let id: SystemSoundID
+        // AudioToolbox is unavailable on watchOS. Provide a simple haptic as a fallback.
+        let device = WKInterfaceDevice.current()
         switch style {
-        case .beep, .chime, .tick: return
-        case .pop, .click: id = 1057
-        case .alert: id = 1005
-        case .ding: id = 1016
+        case .beep, .chime, .tick:
+            // No specific fallback available; use a light click
+            device.play(.click)
+        case .pop, .click:
+            device.play(.click)
+        case .alert:
+            device.play(.failure)
+        case .ding:
+            device.play(.success)
         }
-        AudioServicesPlaySystemSound(id)
     }
 }

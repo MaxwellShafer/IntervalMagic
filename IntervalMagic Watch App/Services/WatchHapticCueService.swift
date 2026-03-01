@@ -45,6 +45,8 @@ final class WatchHapticCueService {
                     device.play(.notification)
                 }
             }
+        case .buzz:
+            device.play(.notification)
         }
     }
 }

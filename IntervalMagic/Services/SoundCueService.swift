@@ -5,7 +5,6 @@
 
 import Foundation
 import AVFoundation
-import AudioToolbox
 
 final class SoundCueService {
     static let shared = SoundCueService()
@@ -53,21 +52,8 @@ final class SoundCueService {
         if let player = players[style] {
             player.currentTime = 0
             player.play()
-        } else {
-            // Fallback to system sound when no bundle asset (e.g. new SoundStyle cases)
-            playSystemSoundFallback(style: style)
         }
-    }
-
-    private func playSystemSoundFallback(style: SoundStyle) {
-        let id: SystemSoundID
-        switch style {
-        case .beep, .chime, .tick: return // Prefer bundle-only for original styles
-        case .pop, .click: id = 1057   // Tink
-        case .alert: id = 1005         // New mail
-        case .ding: id = 1016          // Sent mail
-        }
-        AudioServicesPlaySystemSound(id)
+        // No system sound fallback; only bundle WAVs to avoid unintended haptics and ensure Watch parity.
     }
 
     /// Custom sound playback from CustomCuesStore. No-op if definition or file not found.

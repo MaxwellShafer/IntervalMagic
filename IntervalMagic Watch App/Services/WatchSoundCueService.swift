@@ -42,24 +42,7 @@ final class WatchSoundCueService {
         if let player = players[style] {
             player.currentTime = 0
             player.play()
-        } else {
-            playSystemSoundFallback(style: style)
         }
-    }
-
-    private func playSystemSoundFallback(style: SoundStyle) {
-        // AudioToolbox is unavailable on watchOS. Provide a simple haptic as a fallback.
-        let device = WKInterfaceDevice.current()
-        switch style {
-        case .beep, .chime, .tick:
-            // No specific fallback available; use a light click
-            device.play(.click)
-        case .pop, .click:
-            device.play(.click)
-        case .alert:
-            device.play(.failure)
-        case .ding:
-            device.play(.success)
-        }
+        // No fallback; only bundle WAVs so sound cues are audible on both platforms.
     }
 }

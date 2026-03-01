@@ -43,6 +43,16 @@ final class IntervalSetStore {
         }
     }
 
+    /// Deletes all interval sets. Relationship deleteRule handles cascading to intervals.
+    func deleteAll() throws {
+        let descriptor = FetchDescriptor<IntervalSetEntity>(sortBy: [SortDescriptor(\.name)])
+        let entities = try modelContext.fetch(descriptor)
+        for entity in entities {
+            modelContext.delete(entity)
+        }
+        try modelContext.save()
+    }
+
     private func fetchEntity(by id: UUID) throws -> IntervalSetEntity? {
         var descriptor = FetchDescriptor<IntervalSetEntity>(
             predicate: #Predicate<IntervalSetEntity> { $0.id == id }

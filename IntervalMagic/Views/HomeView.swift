@@ -52,7 +52,7 @@ struct HomeView: View {
                 .buttonStyle(.borderedProminent)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 8)
-                .background(Color(uiColor: .systemBackground))
+                .background(Color(uiColor: .systemGroupedBackground))
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

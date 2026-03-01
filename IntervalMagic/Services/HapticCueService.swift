@@ -30,24 +30,33 @@ final class HapticCueService {
 
     func play(style: HapticStyle) {
         #if canImport(UIKit)
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.prepare()
         switch style {
-        case .single:
-            generator.impactOccurred()
-        case .double:
-            generator.impactOccurred()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        case .single, .double, .triple:
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.prepare()
+            switch style {
+            case .single:
                 generator.impactOccurred()
-            }
-        case .triple:
-            generator.impactOccurred()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            case .double:
+                generator.impactOccurred()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    generator.impactOccurred()
+                }
+            case .triple:
                 generator.impactOccurred()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                     generator.impactOccurred()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                        generator.impactOccurred()
+                    }
                 }
+            case .buzz:
+                break
             }
+        case .buzz:
+            let generator = UINotificationFeedbackGenerator()
+            generator.prepare()
+            generator.notificationOccurred(.warning)
         }
         #endif
     }

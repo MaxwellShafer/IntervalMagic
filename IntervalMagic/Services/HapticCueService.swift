@@ -62,6 +62,14 @@ final class HapticCueService {
         #endif
     }
 
+    /// Play a sequence of steps directly (e.g. for preview in the custom haptic editor).
+    func playSteps(_ steps: [CustomHapticStep]) {
+        #if canImport(UIKit)
+        guard !steps.isEmpty else { return }
+        playSteps(steps, index: 0, delayAccumulator: 0)
+        #endif
+    }
+
     #if canImport(UIKit)
     private func playSteps(_ steps: [CustomHapticStep], index: Int, delayAccumulator: TimeInterval) {
         guard index < steps.count else { return }

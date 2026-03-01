@@ -33,7 +33,26 @@ final class IntervalSetEngine: ObservableObject {
 
     var nextCueStyle: String? {
         guard let interval = currentInterval else { return nil }
-        switch interval.cueType {
+        return cueStyleString(for: interval.cueType)
+    }
+
+    /// The interval we will switch to when the current one ends (nil if at last interval of fixed cycles and no next).
+    var nextInterval: Interval? {
+        if currentIntervalIndex + 1 < set.intervals.count {
+            return set.intervals[currentIntervalIndex + 1]
+        }
+        switch set.cycleMode {
+        case .fixed(let n):
+            guard currentCycle < n else { return nil }
+            return set.intervals.first
+        case .infinite:
+            return set.intervals.first
+        }
+    }
+
+    /// Returns a short description of a cue type for display.
+    func cueStyleString(for cueType: CueType) -> String? {
+        switch cueType {
         case .none: return "None"
         case .haptic(let h): return "Haptic \(h.displayName)"
         case .sound(let s): return "Sound \(s.displayName)"
@@ -59,6 +78,7 @@ final class IntervalSetEngine: ObservableObject {
         timeRemaining = first.durationSeconds
         totalSecondsRemainingInCurrentInterval = first.durationSeconds
         scheduleTick()
+        onCue(first.cueType)
     }
 
     func pause() {
@@ -111,9 +131,6 @@ final class IntervalSetEngine: ObservableObject {
         timeRemaining = totalSecondsRemainingInCurrentInterval
 
         if totalSecondsRemainingInCurrentInterval <= 0 {
-            if let interval = currentInterval {
-                onCue(interval.cueType)
-            }
             advanceToNext()
         }
     }
@@ -124,6 +141,7 @@ final class IntervalSetEngine: ObservableObject {
             let next = set.intervals[currentIntervalIndex]
             timeRemaining = next.durationSeconds
             totalSecondsRemainingInCurrentInterval = next.durationSeconds
+            onCue(next.cueType)
         } else {
             switch set.cycleMode {
             case .fixed(let n):
@@ -136,12 +154,14 @@ final class IntervalSetEngine: ObservableObject {
                 let next = set.intervals[0]
                 timeRemaining = next.durationSeconds
                 totalSecondsRemainingInCurrentInterval = next.durationSeconds
+                onCue(next.cueType)
             case .infinite:
                 currentCycle += 1
                 currentIntervalIndex = 0
                 let next = set.intervals[0]
                 timeRemaining = next.durationSeconds
                 totalSecondsRemainingInCurrentInterval = next.durationSeconds
+                onCue(next.cueType)
             }
         }
     }

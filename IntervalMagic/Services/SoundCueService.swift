@@ -5,18 +5,30 @@
 
 import Foundation
 import AVFoundation
+import AudioToolbox
 
 final class SoundCueService {
     static let shared = SoundCueService()
     private var players: [SoundStyle: AVAudioPlayer] = [:]
 
     private init() {
+        configureAudioSession()
         for style in SoundStyle.allCases {
             if let url = Bundle.main.url(forResource: style.rawValue, withExtension: "wav", subdirectory: "Sounds"),
                let player = try? AVAudioPlayer(contentsOf: url) {
                 player.prepareToPlay()
                 players[style] = player
             }
+        }
+    }
+
+    private func configureAudioSession() {
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+            try session.setActive(true)
+        } catch {
+            // Cue sounds are non-critical; continue without audio session config
         }
     }
 
@@ -38,8 +50,24 @@ final class SoundCueService {
     }
 
     func play(style: SoundStyle) {
-        players[style]?.currentTime = 0
-        players[style]?.play()
+        if let player = players[style] {
+            player.currentTime = 0
+            player.play()
+        } else {
+            // Fallback to system sound when no bundle asset (e.g. new SoundStyle cases)
+            playSystemSoundFallback(style: style)
+        }
+    }
+
+    private func playSystemSoundFallback(style: SoundStyle) {
+        let id: SystemSoundID
+        switch style {
+        case .beep, .chime, .tick: return // Prefer bundle-only for original styles
+        case .pop, .click: id = 1057   // Tink
+        case .alert: id = 1005         // New mail
+        case .ding: id = 1016          // Sent mail
+        }
+        AudioServicesPlaySystemSound(id)
     }
 
     /// Custom sound playback from CustomCuesStore. No-op if definition or file not found.

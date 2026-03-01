@@ -16,9 +16,15 @@ final class CustomCuesStore {
     private let defaults = UserDefaults.standard
     private let fileManager = FileManager.default
 
+    /// Stored so @Observable can track changes and list view updates when saving.
+    private var _customHaptics: [CustomHapticDefinition] = []
+
     var customHaptics: [CustomHapticDefinition] {
-        get { loadHaptics() }
-        set { saveHaptics(newValue) }
+        get { _customHaptics }
+        set {
+            _customHaptics = newValue
+            saveHaptics(newValue)
+        }
     }
 
     var customSounds: [CustomSoundDefinition] {
@@ -26,7 +32,9 @@ final class CustomCuesStore {
         set { saveSounds(newValue) }
     }
 
-    private init() {}
+    private init() {
+        _customHaptics = loadHaptics()
+    }
 
     // MARK: - Custom haptics
 
@@ -119,6 +127,7 @@ final class CustomCuesStore {
             didMigrate = true
         }
         if didMigrate {
+            _customHaptics = list
             saveHaptics(list)
         }
         return list

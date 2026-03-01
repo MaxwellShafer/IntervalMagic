@@ -50,7 +50,13 @@ struct LiveSessionView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
-                        showStopConfirmation = true
+                        if engine.isPaused {
+                            engine.stop()
+                            SessionPersistence.clear()
+                            onDismiss()
+                        } else {
+                            showStopConfirmation = true
+                        }
                     }
                 }
             }
@@ -69,7 +75,9 @@ struct LiveSessionView: View {
                     if !muteState.hapticsMuted {
                         HapticCueService.shared.play(cueType: cueType)
                     }
-                    SoundCueService.shared.play(cueType: cueType)
+                    if !muteState.soundsMuted {
+                        SoundCueService.shared.play(cueType: cueType)
+                    }
                 }
                 if let state = restoreState {
                     engine.restore(
@@ -123,7 +131,9 @@ struct LiveSessionView: View {
                 if !hasBegun {
                     // Pre-start screen with Begin button
                     Text(set.name)
-                        .font(.title2)
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .underline()
                     if let total = engine.totalCycles {
                         Text("Ready: \(total) cycle\(total == 1 ? "" : "s")")
                             .font(.headline)
@@ -135,6 +145,7 @@ struct LiveSessionView: View {
                     } label: {
                         Label("Begin", systemImage: "play.circle.fill")
                             .frame(maxWidth: .infinity)
+                            .frame(minHeight: 56)
                     }
                     .buttonStyle(.borderedProminent)
                 } else {
@@ -150,7 +161,7 @@ struct LiveSessionView: View {
 
                     if let name = engine.currentInterval?.name {
                         Group {
-                            Text("Interval: \(name)")
+                            Text(name)
                                 .font(.title2)
                         }
                         .id(name)
@@ -173,12 +184,24 @@ struct LiveSessionView: View {
                     .animation(.easeIn(duration: 0.35), value: engine.stateSnapshot.intervalIndex)
                     
 
-                    if let next = engine.nextCueStyle {
-                        Text("Next cue: \(next)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .id("next_\(engine.stateSnapshot.intervalIndex)")
-                            .transition(.opacity)
+                    if let nextInterval = engine.nextInterval {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Next:")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.secondary)
+                            Text(nextInterval.name)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            if let cueStr = engine.cueStyleString(for: nextInterval.cueType) {
+                                Text(cueStr)
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .id("next_\(engine.stateSnapshot.intervalIndex)")
+                        .transition(.opacity)
                     }
 
                     VStack(spacing: 16) {
@@ -193,7 +216,9 @@ struct LiveSessionView: View {
                                 .buttonStyle(.borderedProminent)
 
                                 Button(role: .destructive) {
-                                    showStopConfirmation = true
+                                    engine.stop()
+                                    SessionPersistence.clear()
+                                    onDismiss()
                                 } label: {
                                     Label("Stop", systemImage: "stop.fill")
                                         .frame(maxWidth: .infinity)
@@ -210,14 +235,26 @@ struct LiveSessionView: View {
                             .buttonStyle(.borderedProminent)
                         }
 
-                        HStack(spacing: 12) {
-                            Toggle("Mute haptics", isOn: Binding(
-                                get: { muteState.hapticsMuted },
-                                set: { muteState.hapticsMuted = $0 }
-                            ))
-                            .labelsHidden()
-                            Image(systemName: muteState.hapticsMuted ? "speaker.slash" : "hand.raised")
-                                .foregroundStyle(.secondary)
+                        HStack(spacing: 16) {
+                            Button {
+                                muteState.soundsMuted.toggle()
+                            } label: {
+                                Image(systemName: muteState.soundsMuted ? "speaker.slash" : "speaker.wave.2.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(muteState.soundsMuted ? .secondary : .primary)
+                            }
+                            .accessibilityLabel(muteState.soundsMuted ? "Sound off" : "Sound on")
+                            .accessibilityHint("Toggles whether cue plays sound")
+
+                            Button {
+                                muteState.hapticsMuted.toggle()
+                            } label: {
+                                Image(systemName: muteState.hapticsMuted ? "hand.raised.slash.fill" : "waveform")
+                                    .font(.title2)
+                                    .foregroundStyle(muteState.hapticsMuted ? .secondary : .primary)
+                            }
+                            .accessibilityLabel(muteState.hapticsMuted ? "Haptics off" : "Haptics on")
+                            .accessibilityHint("Toggles whether cue plays haptics")
                         }
                     }
                 }
@@ -242,5 +279,6 @@ struct LiveSessionView: View {
 }
 
 private final class MuteState: ObservableObject {
+    @Published var soundsMuted = false
     @Published var hapticsMuted = false
 }

@@ -55,6 +55,19 @@ struct CustomHapticEditorView: View {
                         Label("Add Step", systemImage: "plus.circle")
                     }
                 }
+
+                Section {
+                    Button {
+                        let steps = stepRows.map(\.step)
+                        HapticCueService.shared.playSteps(steps)
+                    } label: {
+                        Label("Preview", systemImage: "play.circle.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .disabled(stepRows.isEmpty)
+                } footer: {
+                    Text("Feel the current haptic pattern before saving.")
+                }
             }
             .navigationTitle(definition.name?.isEmpty == false ? "Edit Haptic" : "New Haptic")
             .navigationBarTitleDisplayMode(.inline)

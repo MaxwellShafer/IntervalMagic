@@ -5,6 +5,7 @@
 
 import Foundation
 import AVFoundation
+import AudioToolbox
 
 final class WatchSoundCueService {
     static let shared = WatchSoundCueService()
@@ -38,7 +39,22 @@ final class WatchSoundCueService {
     }
 
     func play(style: SoundStyle) {
-        players[style]?.currentTime = 0
-        players[style]?.play()
+        if let player = players[style] {
+            player.currentTime = 0
+            player.play()
+        } else {
+            playSystemSoundFallback(style: style)
+        }
+    }
+
+    private func playSystemSoundFallback(style: SoundStyle) {
+        let id: SystemSoundID
+        switch style {
+        case .beep, .chime, .tick: return
+        case .pop, .click: id = 1057
+        case .alert: id = 1005
+        case .ding: id = 1016
+        }
+        AudioServicesPlaySystemSound(id)
     }
 }

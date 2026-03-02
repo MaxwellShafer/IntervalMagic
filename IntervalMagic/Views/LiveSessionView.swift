@@ -58,17 +58,17 @@ struct LiveSessionView: View {
                             showStopConfirmation = true
                         }
                     }
+                    .confirmationDialog("Stop workout?", isPresented: $showStopConfirmation) {
+                        Button("Stop", role: .destructive) {
+                            engine.stop()
+                            SessionPersistence.clear()
+                            onDismiss()
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("Your progress will not be saved.")
+                    }
                 }
-            }
-            .confirmationDialog("Stop workout?", isPresented: $showStopConfirmation) {
-                Button("Stop", role: .destructive) {
-                    engine.stop()
-                    SessionPersistence.clear()
-                    onDismiss()
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("Your progress will not be saved.")
             }
             .onAppear {
                 engine.onCue = { [muteState] cueType in

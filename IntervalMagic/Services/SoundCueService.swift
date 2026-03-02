@@ -31,6 +31,15 @@ final class SoundCueService {
         }
     }
 
+    /// Ensures the audio session is active before playback (fixes first-play on launch or after background).
+    private func ensureSessionActive() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            // Non-critical; playback may still work
+        }
+    }
+
     func play(cueType: CueType, onFinished: (() -> Void)? = nil) {
         let cue: SoundCue?
         switch cueType {
@@ -49,6 +58,7 @@ final class SoundCueService {
     }
 
     func play(style: SoundStyle) {
+        ensureSessionActive()
         if let player = players[style] {
             player.currentTime = 0
             player.play()
@@ -58,6 +68,7 @@ final class SoundCueService {
 
     /// Custom sound playback from CustomCuesStore. No-op if definition or file not found.
     func playCustom(id: UUID, waitUntilFinished: Bool, onFinished: (() -> Void)? = nil) {
+        ensureSessionActive()
         guard let url = CustomCuesStore.shared.fileURL(forCustomSound: id) else {
             onFinished?()
             return

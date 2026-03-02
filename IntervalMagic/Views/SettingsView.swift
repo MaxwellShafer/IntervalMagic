@@ -38,7 +38,7 @@ struct SettingsView: View {
 
                     ColorPicker("Color", selection: Binding(
                         get: {
-                            if let uiColor = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(intervalOutlineColorData) as? UIColor {
+                            if let uiColor = try? NSKeyedUnarchiver.unarchivedObject(ofClass: UIColor.self, from: intervalOutlineColorData) {
                                 return Color(uiColor)
                             }
                             return .blue

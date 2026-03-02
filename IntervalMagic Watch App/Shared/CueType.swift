@@ -25,7 +25,9 @@ extension CueType: Encodable {
         case .sound(let s):
             try container.encode(s, forKey: .sound)
         case .both(let h, let s):
-            try container.encode([h, s], forKey: .both)
+            var bothContainer = container.nestedUnkeyedContainer(forKey: .both)
+            try bothContainer.encode(h)
+            try bothContainer.encode(s)
         }
     }
 }

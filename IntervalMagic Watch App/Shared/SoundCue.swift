@@ -11,7 +11,7 @@ enum SoundCue: Codable, Equatable, Hashable, Sendable {
 
     var displayName: String {
         switch self {
-        case .predefined(let s): return s.rawValue.capitalized
+        case .predefined(let s): return s.displayName
         case .custom: return "Custom"
         }
     }

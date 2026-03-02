@@ -104,7 +104,7 @@ struct CueSelectionView: View {
                 )) {
                     Text("None").tag(nil as SoundCue?)
                     ForEach(SoundStyle.allCases, id: \.self) { style in
-                        Text(style.rawValue.capitalized).tag(SoundCue.predefined(style) as SoundCue?)
+                        Text(style.displayName).tag(SoundCue.predefined(style) as SoundCue?)
                     }
                 }
                 .pickerStyle(.menu)

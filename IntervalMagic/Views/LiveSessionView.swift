@@ -72,6 +72,22 @@ struct LiveSessionView: View {
             }
             .onAppear {
                 engine.onCue = { [muteState] cueType in
+                    // #region agent log
+                    let hasSound = { () -> Bool in
+                        if case .sound = cueType { return true }
+                        if case .both = cueType { return true }
+                        return false
+                    }()
+                    let logPath = "/Users/maxshafer/Development/CursorProjects/IntervalMagic/.cursor/debug-777030.log"
+                    let payload: [String: Any] = ["sessionId": "777030", "message": "onCue fired", "data": ["soundsMuted": muteState.soundsMuted, "hasSound": hasSound, "willCallPlay": hasSound && !muteState.soundsMuted], "timestamp": Int(Date().timeIntervalSince1970 * 1000), "hypothesisId": "H2"]
+                    if let json = try? JSONSerialization.data(withJSONObject: payload), let line = String(data: json + Data([0x0a]), encoding: .utf8), let d = line.data(using: .utf8) {
+                        let url = URL(fileURLWithPath: logPath)
+                        if !FileManager.default.fileExists(atPath: logPath) { try? Data().write(to: url) }
+                        if let h = try? FileHandle(forWritingTo: url) {
+                            h.seekToEndOfFile(); h.write(d); try? h.close()
+                        }
+                    }
+                    // #endregion
                     if !muteState.hapticsMuted {
                         HapticCueService.shared.play(cueType: cueType)
                     }

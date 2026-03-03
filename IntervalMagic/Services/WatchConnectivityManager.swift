@@ -5,11 +5,13 @@
 
 import Foundation
 import WatchConnectivity
+import HealthKit
 
 @Observable
 final class WatchConnectivityManager: NSObject {
     static let shared = WatchConnectivityManager()
     private var session: WCSession?
+    private let healthStore = HKHealthStore()
 
     var isReachable: Bool { session?.isReachable ?? false }
 
@@ -29,6 +31,9 @@ final class WatchConnectivityManager: NSObject {
             appSettings: currentSettings()
         )
         sendToWatch(.syncSets(payload), persistForBackground: true)
+        if startSetId != nil {
+            launchWatchAppForStart()
+        }
     }
 
     func sendSetsOnly(_ sets: [IntervalSet]) {
@@ -54,6 +59,14 @@ final class WatchConnectivityManager: NSObject {
             try? session.updateApplicationContext(dict)
             session.transferUserInfo(dict)
         }
+    }
+
+    private func launchWatchAppForStart() {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+        let configuration = HKWorkoutConfiguration()
+        configuration.activityType = .other
+        configuration.locationType = .unknown
+        healthStore.startWatchApp(with: configuration) { _, _ in }
     }
 }
 

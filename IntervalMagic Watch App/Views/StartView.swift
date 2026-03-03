@@ -9,8 +9,6 @@ struct StartView: View {
     @State private var connectivity = WatchConnectivityManager.shared
     @State private var selectedSetForStart: IntervalSet?
     @State private var selectedSetForActive: IntervalSet?
-    @State private var showStartConfig = false
-    @State private var showActive = false
 
     var body: some View {
         Group {
@@ -25,7 +23,6 @@ struct StartView: View {
                     ForEach(connectivity.intervalSets) { set in
                         Button {
                             selectedSetForStart = set
-                            showStartConfig = true
                         } label: {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(set.name)
@@ -40,22 +37,15 @@ struct StartView: View {
             }
         }
         .navigationTitle("Interval Magic")
-        .sheet(isPresented: $showStartConfig) {
-            if let set = selectedSetForStart {
-                WatchStartConfigView(set: set) {
-                    selectedSetForStart = nil
-                    selectedSetForActive = set
-                    showStartConfig = false
-                    showActive = true
-                }
+        .sheet(item: $selectedSetForStart) { set in
+            WatchStartConfigView(set: set) {
+                selectedSetForStart = nil
+                selectedSetForActive = set
             }
         }
-        .fullScreenCover(isPresented: $showActive) {
-            if let set = selectedSetForActive {
-                ActiveSessionView(set: set) {
-                    showActive = false
-                    selectedSetForActive = nil
-                }
+        .fullScreenCover(item: $selectedSetForActive) { set in
+            ActiveSessionView(set: set) {
+                selectedSetForActive = nil
             }
         }
         .onAppear {
@@ -71,7 +61,6 @@ struct StartView: View {
            let set = connectivity.intervalSets.first(where: { $0.id == startId }) {
             connectivity.clearPendingStart()
             selectedSetForStart = set
-            showStartConfig = true
         }
     }
 

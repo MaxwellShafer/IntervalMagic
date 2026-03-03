@@ -93,7 +93,7 @@ private struct WatchStartConfigView: View {
     }
 
     private var oneCycleSeconds: Int {
-        set.singleCycleDurationSeconds
+        self.set.singleCycleDurationSeconds
     }
 
     init(set: IntervalSet, onStart: @escaping (IntervalSet) -> Void) {

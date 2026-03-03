@@ -9,6 +9,8 @@ import SwiftUI
 
 @main
 struct IntervalMagic_Watch_AppApp: App {
+    @State private var connectivity = WatchConnectivityManager.shared
+
     init() {
         _ = WatchConnectivityManager.shared
     }
@@ -16,6 +18,7 @@ struct IntervalMagic_Watch_AppApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(connectivity.appSettings.useLightMode ? .light : nil)
         }
     }
 }

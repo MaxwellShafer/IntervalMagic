@@ -32,9 +32,9 @@ struct StartView: View {
         .navigationTitle("Interval Magic")
         .sheet(isPresented: $showStartConfig) {
             if let set = selectedSetForStart {
-                WatchStartConfigView(set: set) { effectiveSet in
+                WatchStartConfigView(set: set) {
                     selectedSetForStart = nil
-                    selectedSetForActive = effectiveSet
+                    selectedSetForActive = set
                     showStartConfig = false
                     showActive = true
                 }
@@ -77,57 +77,26 @@ struct StartView: View {
 
 private struct WatchStartConfigView: View {
     let set: IntervalSet
-    let onStart: (IntervalSet) -> Void
+    let onStart: () -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @State private var useInfiniteCycles = false
-    @State private var cycleCount = 1
-
-    private var effectiveSet: IntervalSet {
-        IntervalSet(
-            id: set.id,
-            name: set.name,
-            intervals: set.intervals,
-            cycleMode: useInfiniteCycles ? .infinite : .fixed(max(1, cycleCount))
-        )
-    }
-
-    private var oneCycleSeconds: Int {
-        self.set.singleCycleDurationSeconds
-    }
-
-    init(set: IntervalSet, onStart: @escaping (IntervalSet) -> Void) {
-        self.set = set
-        self.onStart = onStart
-        switch set.cycleMode {
-        case .fixed(let cycles):
-            _useInfiniteCycles = State(initialValue: false)
-            _cycleCount = State(initialValue: max(1, cycles))
-        case .infinite:
-            _useInfiniteCycles = State(initialValue: true)
-            _cycleCount = State(initialValue: 1)
-        }
-    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section(set.name) {
-                    Toggle("Infinite Cycles", isOn: $useInfiniteCycles)
-                    if !useInfiniteCycles {
-                        Stepper("Cycles: \(cycleCount)", value: $cycleCount, in: 1...999)
-                    }
-                    Text(durationText)
+                    Text(cycleText)
+                    Text("Total: \(formatDuration(set.totalDurationSeconds))")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Section {
                     Button {
-                        onStart(effectiveSet)
+                        onStart()
                     } label: {
                         Label("Begin", systemImage: "play.fill")
                     }
-                    .disabled(!effectiveSet.isValid)
+                    .disabled(!set.isValid)
                 }
             }
             .navigationTitle("Start Session")
@@ -141,16 +110,21 @@ private struct WatchStartConfigView: View {
         }
     }
 
-    private var durationText: String {
-        if useInfiniteCycles {
-            return "Total: infinite"
+    private var cycleText: String {
+        switch set.cycleMode {
+        case .fixed(let count):
+            return "Cycles: \(count)"
+        case .infinite:
+            return "Cycles: Infinite"
         }
-        let total = oneCycleSeconds * max(1, cycleCount)
-        let minutes = total / 60
-        let seconds = total % 60
+    }
+
+    private func formatDuration(_ seconds: Int) -> String {
+        let minutes = seconds / 60
+        let remainder = seconds % 60
         if minutes > 0 {
-            return String(format: "Total: %d:%02d", minutes, seconds)
+            return String(format: "%d:%02d", minutes, remainder)
         }
-        return "Total: \(seconds)s"
+        return "\(remainder)s"
     }
 }

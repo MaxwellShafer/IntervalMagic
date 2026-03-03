@@ -22,8 +22,14 @@ struct LiveSessionView: View {
     @AppStorage("intervalOutlineShape") private var intervalOutlineShapeRaw = IntervalOutlineShape.circle.rawValue
     @AppStorage("intervalOutlineColor") private var intervalOutlineColorData: Data = try! NSKeyedArchiver.archivedData(withRootObject: UIColor.systemBlue, requiringSecureCoding: false)
 
-    init(set: IntervalSet, restoreState: SessionState? = nil, onDismiss: @escaping () -> Void) {
+    init(
+        set: IntervalSet,
+        isWatchStart: Bool = false,
+        restoreState: SessionState? = nil,
+        onDismiss: @escaping () -> Void
+    ) {
         self.set = set
+        self.isWatchStart = isWatchStart
         self.restoreState = restoreState
         self.onDismiss = onDismiss
         _engine = StateObject(wrappedValue: IntervalSetEngine(set: set))

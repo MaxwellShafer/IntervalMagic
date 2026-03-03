@@ -13,9 +13,7 @@ final class SoundCueService {
     private init() {
         configureAudioSession()
         for style in SoundStyle.allCases {
-            if let url = Bundle.main.url(forResource: style.rawValue, withExtension: "wav", subdirectory: "Sounds"),
-               let player = try? AVAudioPlayer(contentsOf: url) {
-                player.prepareToPlay()
+            if let player = makePlayer(for: style) {
                 players[style] = player
             }
         }
@@ -24,7 +22,8 @@ final class SoundCueService {
     private func configureAudioSession() {
         let session = AVAudioSession.sharedInstance()
         do {
-            try session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+            // Use playback so cue sounds are audible even when the iPhone is in silent mode.
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try session.setActive(true)
         } catch {
             // Cue sounds are non-critical; continue without audio session config
@@ -56,10 +55,29 @@ final class SoundCueService {
 
     func play(style: SoundStyle) {
         ensureSessionActive()
-        if let player = players[style] {
+        let player: AVAudioPlayer?
+        if let existing = players[style] {
+            player = existing
+        } else if let loaded = makePlayer(for: style) {
+            players[style] = loaded
+            player = loaded
+        } else {
+            player = nil
+        }
+
+        if let player {
             player.currentTime = 0
             player.play()
         }
         // No system sound fallback; only bundle WAVs to avoid unintended haptics and ensure Watch parity.
+    }
+
+    private func makePlayer(for style: SoundStyle) -> AVAudioPlayer? {
+        let url = Bundle.main.url(forResource: style.rawValue, withExtension: "wav", subdirectory: "Sounds")
+            ?? Bundle.main.url(forResource: style.rawValue, withExtension: "wav")
+        guard let url else { return nil }
+        guard let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
+        player.prepareToPlay()
+        return player
     }
 }

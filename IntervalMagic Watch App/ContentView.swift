@@ -8,10 +8,13 @@
 import SwiftUI
 
 struct ContentView: View {
+    @AppStorage("useLightMode") private var useLightMode = false
+
     var body: some View {
         NavigationStack {
             StartView()
         }
+        .preferredColorScheme(useLightMode ? .light : nil)
     }
 }
 

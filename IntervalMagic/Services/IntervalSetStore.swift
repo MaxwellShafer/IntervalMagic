@@ -27,12 +27,14 @@ final class IntervalSetStore {
             _ = IntervalSetEntity.from(set, modelContext: modelContext)
         }
         try modelContext.save()
+        syncWatch()
     }
 
     func delete(_ set: IntervalSet) throws {
         if let entity = try fetchEntity(by: set.id) {
             modelContext.delete(entity)
             try modelContext.save()
+            syncWatch()
         }
     }
 
@@ -40,6 +42,7 @@ final class IntervalSetStore {
         if let entity = try fetchEntity(by: id) {
             modelContext.delete(entity)
             try modelContext.save()
+            syncWatch()
         }
     }
 
@@ -51,6 +54,12 @@ final class IntervalSetStore {
             modelContext.delete(entity)
         }
         try modelContext.save()
+        syncWatch()
+    }
+
+    private func syncWatch() {
+        let sets = (try? fetchAll()) ?? []
+        WatchConnectivityManager.shared.sendSetsOnly(sets)
     }
 
     private func fetchEntity(by id: UUID) throws -> IntervalSetEntity? {

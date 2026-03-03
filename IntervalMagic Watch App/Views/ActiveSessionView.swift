@@ -13,6 +13,7 @@ struct ActiveSessionView: View {
 
     @StateObject private var engine: IntervalSetEngine
     @StateObject private var muteState = WatchMuteState()
+    @State private var connectivity = WatchConnectivityManager.shared
     @State private var workoutManager: WatchWorkoutManager?
     @State private var showCompletion = false
 
@@ -51,14 +52,13 @@ struct ActiveSessionView: View {
                             HStack {
                                 Button {
                                     engine.resume()
+                                    sendCurrentSnapshot()
                                 } label: {
                                     Image(systemName: "play.fill")
                                 }
 
                                 Button(role: .destructive) {
-                                    engine.stop()
-                                    workoutManager?.endWorkout()
-                                    onDismiss()
+                                    stopAndDismiss(sendStopMessage: true)
                                 } label: {
                                     Image(systemName: "stop.fill")
                                 }
@@ -66,24 +66,34 @@ struct ActiveSessionView: View {
                         } else {
                             Button {
                                 engine.pause()
+                                sendCurrentSnapshot()
                             } label: {
                                 Image(systemName: "pause.fill")
                             }
                         }
-
-                        Toggle("Mute", isOn: Binding(
-                            get: { muteState.hapticsMuted && muteState.soundsMuted },
-                            set: {
-                                muteState.hapticsMuted = $0
-                                muteState.soundsMuted = $0
+                        if let nextInterval = engine.nextInterval {
+                            VStack(spacing: 2) {
+                                Text("Next")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                Text(nextInterval.name)
+                                    .font(.caption)
+                                    .multilineTextAlignment(.center)
+                                if let cue = engine.cueStyleString(for: nextInterval.cueType) {
+                                    Text(cue)
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.center)
+                                }
                             }
-                        ))
-                        .labelsHidden()
+                            .frame(maxWidth: .infinity)
+                        }
                     }
                 }
                 .padding()
             }
         }
+        .preferredColorScheme(connectivity.appSettings.useLightMode ? .light : nil)
         .onAppear {
             engine.onCue = { [muteState] cueType in
                 if !muteState.hapticsMuted {
@@ -93,18 +103,36 @@ struct ActiveSessionView: View {
                     WatchSoundCueService.shared.play(cueType: cueType)
                 }
             }
+            muteState.hapticsMuted = connectivity.receivedMuteUpdate.hapticsMuted
+            muteState.soundsMuted = connectivity.receivedMuteUpdate.soundsMuted
             workoutManager = WatchWorkoutManager()
             workoutManager?.startWorkout()
             engine.start()
+            sendCurrentSnapshot(started: true)
         }
+        .onChange(of: connectivity.sessionControlEvent) { _, _ in
+            applyRemoteControl()
+        }
+        .onChange(of: connectivity.receivedMuteUpdate) { _, update in
+            muteState.hapticsMuted = update.hapticsMuted
+            muteState.soundsMuted = update.soundsMuted
+        }
+        .onChange(of: engine.timeRemaining) { _, _ in sendCurrentSnapshot() }
+        .onChange(of: engine.currentIntervalIndex) { _, _ in sendCurrentSnapshot() }
+        .onChange(of: engine.currentCycle) { _, _ in sendCurrentSnapshot() }
+        .onChange(of: engine.isPaused) { _, _ in sendCurrentSnapshot() }
         .onChange(of: engine.isCompleted) { _, completed in
             if completed {
                 workoutManager?.endWorkout()
                 WatchHapticCueService.shared.play(style: HapticStyle.double)
+                connectivity.sendSessionCompleted()
                 showCompletion = true
             }
         }
         .onDisappear {
+            if !engine.isCompleted && engine.isRunning {
+                connectivity.sendSessionStopped()
+            }
             engine.stop()
             workoutManager?.endWorkout()
         }
@@ -112,6 +140,53 @@ struct ActiveSessionView: View {
 
     private func formatTime(_ seconds: Int) -> String {
         String(format: "%02d:%02d", seconds / 60, seconds % 60)
+    }
+
+    private func currentSnapshot() -> SessionSnapshot {
+        let state = engine.stateSnapshot
+        return SessionSnapshot(
+            setId: set.id,
+            intervalIndex: state.intervalIndex,
+            cycle: state.cycle,
+            timeRemaining: state.timeRemaining,
+            isPaused: state.isPaused,
+            isCompleted: engine.isCompleted
+        )
+    }
+
+    private func sendCurrentSnapshot(started: Bool = false) {
+        let snapshot = currentSnapshot()
+        connectivity.updateCurrentSessionSnapshot(snapshot)
+        if started {
+            connectivity.sendSessionStarted(snapshot: snapshot)
+        } else {
+            connectivity.sendSessionUpdate(snapshot: snapshot)
+        }
+    }
+
+    private func applyRemoteControl() {
+        guard let control = connectivity.receivedSessionControl else { return }
+        switch control.action {
+        case .pause:
+            engine.pause()
+        case .resume:
+            engine.resume()
+        case .stop:
+            stopAndDismiss(sendStopMessage: true)
+            connectivity.clearReceivedSessionControl()
+            return
+        }
+        connectivity.clearReceivedSessionControl()
+        sendCurrentSnapshot()
+    }
+
+    private func stopAndDismiss(sendStopMessage: Bool) {
+        engine.stop()
+        workoutManager?.endWorkout()
+        if sendStopMessage {
+            connectivity.sendSessionStopped()
+        }
+        onDismiss()
     }
 }
 

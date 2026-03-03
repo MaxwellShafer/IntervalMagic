@@ -63,7 +63,9 @@ struct IntervalSetBuilderView: View {
                     HStack {
                         
                         CycleCountInputView(cycleMode: $viewModel.cycleMode)
-                        
+                        Spacer()
+                        Divider()
+                        Spacer()
                         VStack {
                             Text("Total duration")
                             Spacer()

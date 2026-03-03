@@ -64,8 +64,12 @@ Form {
                         .disabled(!effectiveSet.isValid)
                         Divider()
                         Button {
-                            onStartOnWatch(effectiveSet)
                             isPresented = false
+                            // Dismiss first so the phone stays on the set list,
+                            // then trigger the watch start request.
+                            DispatchQueue.main.async {
+                                onStartOnWatch(effectiveSet)
+                            }
                         } label: {
                             Label("Start on Watch", systemImage: "applewatch")
                                 .frame(maxWidth: .infinity)

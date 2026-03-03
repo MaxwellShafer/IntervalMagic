@@ -79,12 +79,13 @@ struct HomeView: View {
                         selectedSetForStart = nil
                     },
                     onStartOnWatch: { effectiveSet in
+                        // Ensure the phone stays on the interval set list.
+                        selectedSetForStart = nil
                         let store = IntervalSetStore(modelContext: modelContext)
                         let allSets = (try? store.fetchAll()) ?? []
                         // Send the saved sets, but override the selected set's cycle mode for this start only.
                         let patched = allSets.map { $0.id == effectiveSet.id ? effectiveSet : $0 }
                         WatchConnectivityManager.shared.sendIntervalSets(patched, startSetId: effectiveSet.id)
-                        selectedSetForStart = nil
                     }
                 )
                 .presentationDetents([.fraction(0.55)])

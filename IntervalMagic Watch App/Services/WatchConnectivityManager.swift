@@ -14,6 +14,7 @@ final class WatchConnectivityManager: NSObject {
     private(set) var intervalSets: [IntervalSet] = []
     private(set) var pendingStartSetId: UUID?
     private(set) var appSettings = AppSettings(useLightMode: false)
+    private(set) var phoneRequestedBegin = false
 
     override init() {
         super.init()
@@ -26,6 +27,25 @@ final class WatchConnectivityManager: NSObject {
 
     func clearPendingStart() {
         pendingStartSetId = nil
+    }
+
+    func clearPhoneRequestedBegin() {
+        phoneRequestedBegin = false
+    }
+
+    func sendWatchSessionStarted() {
+        sendToPhone(.watchSessionStarted)
+    }
+
+    private func sendToPhone(_ message: WatchToPhoneMessage) {
+        guard let session else { return }
+        guard let data = try? JSONEncoder().encode(message),
+              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        if session.isReachable {
+            session.sendMessage(dict, replyHandler: nil)
+        } else {
+            session.transferUserInfo(dict)
+        }
     }
 
     private func decodeAndApply(_ dict: [String: Any]) {
@@ -50,6 +70,8 @@ final class WatchConnectivityManager: NSObject {
         case .settingsUpdate(let settings):
             appSettings = settings
             UserDefaults.standard.set(settings.useLightMode, forKey: "useLightMode")
+        case .beginSession:
+            phoneRequestedBegin = true
         }
     }
 }

@@ -14,6 +14,7 @@ final class WatchConnectivityManager: NSObject {
     private let healthStore = HKHealthStore()
 
     var isReachable: Bool { session?.isReachable ?? false }
+    var watchDidStart = false
 
     override init() {
         super.init()
@@ -42,6 +43,14 @@ final class WatchConnectivityManager: NSObject {
 
     func sendSettings(useLightMode: Bool) {
         sendToWatch(.settingsUpdate(AppSettings(useLightMode: useLightMode)), persistForBackground: true)
+    }
+
+    func sendBeginSession() {
+        sendToWatch(.beginSession)
+    }
+
+    func resetWatchDidStart() {
+        watchDidStart = false
     }
 
     private func currentSettings() -> AppSettings {
@@ -77,9 +86,30 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
     func sessionReachabilityDidChange(_ session: WCSession) {}
 
-    func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {}
+    func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        decodeAndApply(message)
+    }
 
-    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {}
+    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+        decodeAndApply(applicationContext)
+    }
 
-    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {}
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        decodeAndApply(userInfo)
+    }
+
+    private func decodeAndApply(_ dict: [String: Any]) {
+        guard let data = try? JSONSerialization.data(withJSONObject: dict),
+              let message = try? JSONDecoder().decode(WatchToPhoneMessage.self, from: data) else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.apply(message)
+        }
+    }
+
+    private func apply(_ message: WatchToPhoneMessage) {
+        switch message {
+        case .watchSessionStarted:
+            watchDidStart = true
+        }
+    }
 }

@@ -14,6 +14,7 @@ struct ContentView: View {
     @AppStorage("useLightMode") private var useLightMode = false
     @State private var connectivity = WatchConnectivityManager.shared
     @State private var sessionToPresent: IntervalSet?
+    @State private var isWatchStart = false
     @State private var restoreState: SessionState?
     @State private var showResumeAlert = false
     @State private var pendingResumeSet: IntervalSet?
@@ -22,22 +23,37 @@ struct ContentView: View {
         HomeView(startSession: { set in
             SessionPersistence.clear()
             restoreState = nil
+            isWatchStart = false
+            sessionToPresent = set
+        }, startWatchSession: { set in
+            SessionPersistence.clear()
+            restoreState = nil
+            isWatchStart = true
             sessionToPresent = set
         })
         .tint(AppTheme.primary)
         .preferredColorScheme(useLightMode ? .light : nil)
         .fullScreenCover(isPresented: Binding(
             get: { sessionToPresent != nil },
-            set: { if !$0 { sessionToPresent = nil; restoreState = nil; SessionPersistence.clear() } }
+            set: {
+                if !$0 {
+                    sessionToPresent = nil
+                    restoreState = nil
+                    isWatchStart = false
+                    SessionPersistence.clear()
+                }
+            }
         )) {
             if let set = sessionToPresent {
                 LiveSessionView(
                     set: set,
+                    isWatchStart: isWatchStart,
                     restoreState: restoreState,
                     onDismiss: {
                         SessionPersistence.clear()
                         sessionToPresent = nil
                         restoreState = nil
+                        isWatchStart = false
                     }
                 )
             }
@@ -58,6 +74,7 @@ struct ContentView: View {
             Button("Resume") {
                 if let set = pendingResumeSet, let state = SessionPersistence.load() {
                     restoreState = state
+                    isWatchStart = false
                     sessionToPresent = set
                 }
                 pendingResumeSet = nil

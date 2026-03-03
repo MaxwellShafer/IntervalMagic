@@ -9,6 +9,7 @@ import UIKit
 
 struct LiveSessionView: View {
     let set: IntervalSet
+    var isWatchStart: Bool = false
     var restoreState: SessionState?
     let onDismiss: () -> Void
 
@@ -16,6 +17,7 @@ struct LiveSessionView: View {
     @StateObject private var muteState = MuteState()
     @State private var showStopConfirmation = false
     @State private var hasBegun = false
+    @State private var connectivity = WatchConnectivityManager.shared
 
     @AppStorage("intervalOutlineShape") private var intervalOutlineShapeRaw = IntervalOutlineShape.circle.rawValue
     @AppStorage("intervalOutlineColor") private var intervalOutlineColorData: Data = try! NSKeyedArchiver.archivedData(withRootObject: UIColor.systemBlue, requiringSecureCoding: false)
@@ -93,6 +95,9 @@ struct LiveSessionView: View {
                 } else {
                     // Wait for user to press Begin
                     hasBegun = false
+                    if isWatchStart {
+                        connectivity.resetWatchDidStart()
+                    }
                 }
             }
             .onDisappear {
@@ -118,6 +123,11 @@ struct LiveSessionView: View {
                     isPaused: isPaused
                 ))
             }
+            .onChange(of: connectivity.watchDidStart) { _, didStart in
+                guard isWatchStart, !hasBegun, didStart else { return }
+                connectivity.resetWatchDidStart()
+                onDismiss()
+            }
         }
     }
 
@@ -140,8 +150,13 @@ struct LiveSessionView: View {
                             .foregroundStyle(.secondary)
                     }
                     Button {
-                        hasBegun = true
-                        engine.start()
+                        if isWatchStart {
+                            connectivity.sendBeginSession()
+                            onDismiss()
+                        } else {
+                            hasBegun = true
+                            engine.start()
+                        }
                     } label: {
                         Label("Begin", systemImage: "play.circle.fill")
                             .frame(maxWidth: .infinity)

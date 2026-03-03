@@ -80,23 +80,25 @@ private struct WatchStartConfigView: View {
     let onStart: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var connectivity = WatchConnectivityManager.shared
+    @State private var didStart = false
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Button {
+                        performStart()
+                    } label: {
+                        Label("Begin", systemImage: "play.fill")
+                    }
+                    .disabled(!set.isValid)
+                }
                 Section(set.name) {
                     Text(cycleText)
                     Text("Total: \(formatDuration(set.totalDurationSeconds))")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                }
-                Section {
-                    Button {
-                        onStart()
-                    } label: {
-                        Label("Begin", systemImage: "play.fill")
-                    }
-                    .disabled(!set.isValid)
                 }
             }
             .navigationTitle("Start Session")
@@ -107,7 +109,25 @@ private struct WatchStartConfigView: View {
                     }
                 }
             }
+            .onAppear {
+                if connectivity.phoneRequestedBegin {
+                    performStart()
+                }
+            }
+            .onChange(of: connectivity.phoneRequestedBegin) { _, requested in
+                if requested {
+                    performStart()
+                }
+            }
         }
+    }
+
+    private func performStart() {
+        guard !didStart else { return }
+        didStart = true
+        connectivity.clearPhoneRequestedBegin()
+        connectivity.sendWatchSessionStarted()
+        onStart()
     }
 
     private var cycleText: String {

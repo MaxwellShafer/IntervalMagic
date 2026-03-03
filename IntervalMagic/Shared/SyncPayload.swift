@@ -18,6 +18,11 @@ enum SyncCommand: Codable {
 enum PhoneToWatchMessage: Codable {
     case syncSets(SyncPayload)
     case settingsUpdate(AppSettings)
+    case beginSession
+}
+
+enum WatchToPhoneMessage: Codable {
+    case watchSessionStarted
 }
 
 struct AppSettings: Codable, Equatable {

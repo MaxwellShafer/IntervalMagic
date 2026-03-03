@@ -13,18 +13,28 @@ struct StartView: View {
     @State private var showActive = false
 
     var body: some View {
-        List {
-            ForEach(connectivity.intervalSets) { set in
-                Button {
-                    selectedSetForStart = set
-                    showStartConfig = true
-                } label: {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(set.name)
-                            .font(.headline)
-                        Text(formatDuration(set.totalDurationSeconds))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+        Group {
+            if connectivity.intervalSets.isEmpty {
+                ContentUnavailableView {
+                    Label("No Interval Sets", systemImage: "list.bullet.rectangle")
+                } description: {
+                    Text("Create an Interval Set on your phone to get started.")
+                }
+            } else {
+                List {
+                    ForEach(connectivity.intervalSets) { set in
+                        Button {
+                            selectedSetForStart = set
+                            showStartConfig = true
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(set.name)
+                                    .font(.headline)
+                                Text(formatDuration(set.totalDurationSeconds))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
             }

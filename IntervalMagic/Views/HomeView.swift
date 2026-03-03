@@ -15,6 +15,7 @@ struct HomeView: View {
 
     @State private var showBuilder = false
     @State private var showSettings = false
+    @State private var showNoWatchAlert = false
     @State private var setToEdit: IntervalSet?
     @State private var selectedSetForStart: IntervalSet?
     @State private var selectedSetForOptions: IntervalSet?
@@ -80,11 +81,17 @@ struct HomeView: View {
                         selectedSetForStart = nil
                     },
                     onStartOnWatch: { effectiveSet in
+                        let connectivity = WatchConnectivityManager.shared
+                        guard connectivity.isPaired, connectivity.isWatchAppInstalled else {
+                            showNoWatchAlert = true
+                            return
+                        }
+
                         let store = IntervalSetStore(modelContext: modelContext)
                         let allSets = (try? store.fetchAll()) ?? []
                         // Send the saved sets, but override the selected set's cycle mode for this start only.
                         let patched = allSets.map { $0.id == effectiveSet.id ? effectiveSet : $0 }
-                        WatchConnectivityManager.shared.sendIntervalSets(patched, startSetId: effectiveSet.id)
+                        connectivity.sendIntervalSets(patched, startSetId: effectiveSet.id)
                         startWatchSession?(effectiveSet)
                         selectedSetForStart = nil
                     }
@@ -122,6 +129,11 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView(isPresented: $showSettings)
+            }
+            .alert("No Paired Watch Detected", isPresented: $showNoWatchAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Ensure your watch is connected and has IntervalMagic installed.")
             }
         }
     }

@@ -9,6 +9,7 @@ import WatchConnectivity
 @Observable
 final class WatchConnectivityManager: NSObject {
     static let shared = WatchConnectivityManager()
+    private static let savedIntervalSetsKey = "savedIntervalSets"
     private var session: WCSession?
 
     private(set) var intervalSets: [IntervalSet] = []
@@ -20,6 +21,7 @@ final class WatchConnectivityManager: NSObject {
 
     override init() {
         super.init()
+        loadPersistedSets()
         if WCSession.isSupported() {
             session = WCSession.default
             session?.delegate = self
@@ -58,10 +60,22 @@ final class WatchConnectivityManager: NSObject {
         }
     }
 
+    private func persistSets() {
+        guard let data = try? JSONEncoder().encode(intervalSets) else { return }
+        UserDefaults.standard.set(data, forKey: Self.savedIntervalSetsKey)
+    }
+
+    private func loadPersistedSets() {
+        guard let data = UserDefaults.standard.data(forKey: Self.savedIntervalSetsKey),
+              let sets = try? JSONDecoder().decode([IntervalSet].self, from: data) else { return }
+        intervalSets = sets
+    }
+
     private func apply(_ message: PhoneToWatchMessage) {
         switch message {
         case .syncSets(let payload):
             intervalSets = payload.intervalSets
+            persistSets()
             if let settings = payload.appSettings {
                 appSettings = settings
                 UserDefaults.standard.set(settings.useLightMode, forKey: "useLightMode")

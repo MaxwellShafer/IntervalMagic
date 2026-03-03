@@ -14,6 +14,8 @@ final class WatchConnectivityManager: NSObject {
     private let healthStore = HKHealthStore()
 
     var isReachable: Bool { session?.isReachable ?? false }
+    var isPaired: Bool { session?.isPaired ?? false }
+    var isWatchAppInstalled: Bool { session?.isWatchAppInstalled ?? false }
     var watchDidStart = false
 
     override init() {

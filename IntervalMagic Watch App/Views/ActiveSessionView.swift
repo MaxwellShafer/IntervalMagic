@@ -16,6 +16,7 @@ struct ActiveSessionView: View {
     @AppStorage("useLightMode") private var useLightMode = false
     @State private var workoutManager: WatchWorkoutManager?
     @State private var showCompletion = false
+    @State private var userStopped = false
 
     init(set: IntervalSet, onDismiss: @escaping () -> Void) {
         self.set = set
@@ -101,6 +102,7 @@ struct ActiveSessionView: View {
         }
         .preferredColorScheme(useLightMode ? .light : nil)
         .onAppear {
+            userStopped = false
             engine.onCue = { [muteState] cueType in
                 if !muteState.hapticsMuted {
                     WatchHapticCueService.shared.play(cueType: cueType)
@@ -114,7 +116,7 @@ struct ActiveSessionView: View {
             engine.start()
         }
         .onChange(of: engine.isCompleted) { _, completed in
-            if completed {
+            if completed && !userStopped {
                 workoutManager?.endWorkout()
                 WatchHapticCueService.shared.play(style: HapticStyle.double)
                 showCompletion = true
@@ -131,6 +133,7 @@ struct ActiveSessionView: View {
     }
 
     private func stopAndDismiss() {
+        userStopped = true
         engine.stop()
         workoutManager?.endWorkout()
         onDismiss()

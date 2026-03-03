@@ -66,6 +66,8 @@ final class WatchConnectivityManager: NSObject {
             }
             if case .startSet(let id) = payload.command {
                 pendingStartSetId = id
+            } else {
+                pendingStartSetId = nil
             }
         case .settingsUpdate(let settings):
             appSettings = settings

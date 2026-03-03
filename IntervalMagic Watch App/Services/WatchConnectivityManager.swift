@@ -13,7 +13,9 @@ final class WatchConnectivityManager: NSObject {
 
     private(set) var intervalSets: [IntervalSet] = []
     private(set) var pendingStartSetId: UUID?
-    private(set) var appSettings = AppSettings(useLightMode: false)
+    private(set) var appSettings = AppSettings(
+        useLightMode: UserDefaults.standard.bool(forKey: "useLightMode")
+    )
     private(set) var phoneRequestedBegin = false
 
     override init() {

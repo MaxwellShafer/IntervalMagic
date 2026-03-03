@@ -149,7 +149,6 @@ struct LiveSessionView: View {
                     Text(set.name)
                         .font(.title)
                         .fontWeight(.bold)
-                        .underline()
                     if let total = engine.totalCycles {
                         Text("Ready: \(total) cycle\(total == 1 ? "" : "s")")
                             .font(.headline)

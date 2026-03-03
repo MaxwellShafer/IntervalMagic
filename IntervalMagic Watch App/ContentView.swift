@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct ContentView: View {
-    @AppStorage("useLightMode") private var useLightMode = false
+    @State private var connectivity = WatchConnectivityManager.shared
 
     var body: some View {
         NavigationStack {
             StartView()
         }
-        .preferredColorScheme(useLightMode ? .light : nil)
+        .preferredColorScheme(connectivity.appSettings.useLightMode ? .light : nil)
     }
 }
 

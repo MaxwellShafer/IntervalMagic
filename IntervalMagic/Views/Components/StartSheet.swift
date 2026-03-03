@@ -61,6 +61,7 @@ Form {
                                 .frame(maxWidth: .infinity)
                                 .foregroundStyle(.primary)
                         }
+                        .buttonStyle(.borderless)
                         .disabled(!effectiveSet.isValid)
                         Divider()
                         Button {
@@ -70,6 +71,7 @@ Form {
                                 .frame(maxWidth: .infinity)
                                 .foregroundStyle(.primary)
                         }
+                        .buttonStyle(.borderless)
                         .disabled(!effectiveSet.isValid)
                     }
                 }

@@ -13,7 +13,7 @@ struct ActiveSessionView: View {
 
     @StateObject private var engine: IntervalSetEngine
     @StateObject private var muteState = WatchMuteState()
-    @AppStorage("useLightMode") private var useLightMode = false
+    @State private var connectivity = WatchConnectivityManager.shared
     @State private var workoutManager: WatchWorkoutManager?
     @State private var showCompletion = false
     @State private var userStopped = false
@@ -100,7 +100,7 @@ struct ActiveSessionView: View {
                 .padding()
             }
         }
-        .preferredColorScheme(useLightMode ? .light : nil)
+        .preferredColorScheme(connectivity.appSettings.useLightMode ? .light : nil)
         .onAppear {
             userStopped = false
             engine.onCue = { [muteState] cueType in

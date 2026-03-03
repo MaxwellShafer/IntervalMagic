@@ -72,8 +72,11 @@ struct ActiveSessionView: View {
                         }
 
                         Toggle("Mute", isOn: Binding(
-                            get: { muteState.hapticsMuted },
-                            set: { muteState.hapticsMuted = $0 }
+                            get: { muteState.hapticsMuted && muteState.soundsMuted },
+                            set: {
+                                muteState.hapticsMuted = $0
+                                muteState.soundsMuted = $0
+                            }
                         ))
                         .labelsHidden()
                     }
@@ -86,7 +89,9 @@ struct ActiveSessionView: View {
                 if !muteState.hapticsMuted {
                     WatchHapticCueService.shared.play(cueType: cueType)
                 }
-                WatchSoundCueService.shared.play(cueType: cueType)
+                if !muteState.soundsMuted {
+                    WatchSoundCueService.shared.play(cueType: cueType)
+                }
             }
             workoutManager = WatchWorkoutManager()
             workoutManager?.startWorkout()
@@ -112,4 +117,5 @@ struct ActiveSessionView: View {
 
 private final class WatchMuteState: ObservableObject {
     @Published var hapticsMuted = false
+    @Published var soundsMuted = false
 }

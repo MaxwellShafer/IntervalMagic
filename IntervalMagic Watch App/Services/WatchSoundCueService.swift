@@ -32,9 +32,6 @@ final class WatchSoundCueService {
         switch cue {
         case .predefined(let style):
             play(style: style)
-        case .custom:
-            // Custom sounds not synced to Watch; no-op
-            break
         }
     }
 
